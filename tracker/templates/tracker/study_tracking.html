@@ -1,0 +1,670 @@
+{% extends 'tracker/dashboard_base.html' %}
+
+{% block title %}Çalışma Takibi - Studie{% endblock %}
+
+{% block page_title %}Çalışma Takibi{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modal stili */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: opacity 0.2s;
+    }
+    
+    .close:hover {
+        opacity: 0.7;
+    }
+    
+    .modal-body {
+        padding: 25px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    
+    /* Küçük istatistik kutucukları */
+    .mini-stats {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .mini-stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        font-size: 12px;
+        min-width: 100px;
+    }
+    
+    .mini-stat-card.secondary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+    }
+    
+    .mini-stat-label {
+        font-size: 10px;
+        opacity: 0.9;
+        margin-bottom: 3px;
+        font-weight: 500;
+    }
+    
+    .mini-stat-value {
+        font-size: 18px;
+        font-weight: 700;
+    }
+    
+    .section-header-with-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    /* Tablo stili */
+    .sessions-table {
+        width: 100%;
+        background-color: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .sessions-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .sessions-table thead {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .sessions-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .sessions-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        font-size: 14px;
+        color: #555;
+    }
+    
+    .sessions-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .sessions-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Buton stilleri */
+    .btn-edit {
+        background-color: #17a2b8;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-edit:hover {
+        background-color: #138496;
+    }
+    
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+    
+    .btn-group {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+    
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+    
+    /* Not popup stili */
+    .note-popup {
+        display: none;
+        position: fixed;
+        z-index: 3000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+    }
+    
+    .note-popup-content {
+        background-color: white;
+        margin: 10% auto;
+        padding: 25px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: popupSlideIn 0.3s ease;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    @keyframes popupSlideIn {
+        from {
+            transform: translateY(-30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .note-popup-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .note-popup-header h4 {
+        margin: 0;
+        color: #333;
+        font-size: 18px;
+    }
+    
+    .note-popup-close {
+        color: #999;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+    
+    .note-popup-close:hover {
+        color: #333;
+    }
+    
+    .note-popup-body {
+        color: #555;
+        font-size: 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    /* Tıklanabilir not hücresi */
+    .note-cell {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .note-cell:hover {
+        background-color: #f0f4ff;
+    }
+    
+    /* Tarih navigasyonu ve buton container */
+    .date-nav-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    /* Tarih navigasyonu */
+    .date-navigation {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        flex: 1;
+    }
+    
+    .date-nav-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+    }
+    
+    .date-nav-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .date-nav-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .date-display {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        text-align: center;
+        flex: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Modal - Yeni Çalışma Kaydı Ekle -->
+<div id="addSessionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Yeni Çalışma Kaydı Ekle</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form method="post" id="sessionForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                            {{ form.subject.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}</label>
+                        {{ form.duration }}
+                        {% if form.duration.errors %}
+                            <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                                {{ form.duration.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.date.id_for_label }}">{{ form.date.label }}</label>
+                        {{ form.date }}
+                        {% if form.date.errors %}
+                            <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                                {{ form.date.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
+                    {{ form.note }}
+                    {% if form.note.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                            {{ form.note.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn-primary">Kayıt Ekle</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Kayıtlar tablosu -->
+<div>
+    <!-- İstatistik kutucukları -->
+    <div style="margin-bottom: 20px;">
+        <div class="mini-stats">
+            <div class="mini-stat-card">
+                <div class="mini-stat-label">Bugünkü Toplam Çalışma</div>
+                <div class="mini-stat-value">
+                    {% if today_hours > 0 %}
+                        {{ today_hours }}sa {{ today_minutes }}dk
+                    {% else %}
+                        {{ today_minutes }}dk
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mini-stat-card secondary">
+                <div class="mini-stat-label">Günlük Seri (Streak)</div>
+                <div class="mini-stat-value">{{ streak }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Başlık -->
+    <div class="section-header">
+        <h3 class="section-title">Çalışma Kayıtlarım</h3>
+    </div>
+    
+    <!-- Tarih navigasyonu ve buton -->
+    <div class="date-nav-container">
+        <div class="date-navigation">
+            <a href="?date={{ prev_date|date:'Y-m-d' }}" class="date-nav-btn" title="Önceki gün">‹</a>
+            <div class="date-display">
+                {% if selected_date == today %}
+                    Bugün - {{ selected_date|date:"d.m.Y" }}
+                {% else %}
+                    {{ selected_date|date:"d.m.Y" }}
+                {% endif %}
+            </div>
+            {% if selected_date < today %}
+                <a href="?date={{ next_date|date:'Y-m-d' }}" class="date-nav-btn" title="Sonraki gün">›</a>
+            {% else %}
+                <span class="date-nav-btn" style="background: #ccc; cursor: not-allowed; opacity: 0.5;" title="Bugünden ileriye gidilemez">›</span>
+            {% endif %}
+        </div>
+        <button class="btn-add" onclick="openModal()">Ders Kaydı Ekle</button>
+    </div>
+    
+    {% if sessions %}
+        <div class="sessions-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ders Adı</th>
+                        <th>Süre</th>
+                        <th>Tarih</th>
+                        <th>Not</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                        <tr>
+                            <td><strong>{{ session.subject }}</strong></td>
+                            <td>{{ session.duration }} dakika</td>
+                            <td>{{ session.date|date:"d.m.Y" }}</td>
+                            <td class="{% if session.note and session.note|length > 50 %}note-cell{% endif %}" {% if session.note and session.note|length > 50 %}onclick="showNotePopup('{{ session.note|escapejs }}')"{% endif %}>
+                                {% if session.note %}
+                                    {% if session.note|length > 50 %}
+                                        {{ session.note|truncatewords:10 }}
+                                    {% else %}
+                                        {{ session.note }}
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #999;">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'tracker:edit_session' session.id %}" class="btn-edit">Düzenle</a>
+                                    <a href="{% url 'tracker:delete_session' session.id %}" class="btn-delete">Sil</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="sessions-table">
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <p style="font-size: 18px; margin-bottom: 10px;">
+                    {% if selected_date == today %}
+                        Bugün için henüz çalışma kaydı yok
+                    {% else %}
+                        {{ selected_date|date:"d.m.Y" }} tarihi için kayıt yok
+                    {% endif %}
+                </p>
+                <p style="font-size: 14px; color: #999;">Sağ üstteki "Ders Kaydı Ekle" butonuna tıklayarak kayıt oluşturun.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Modal açma fonksiyonu
+    function openModal() {
+        document.getElementById('addSessionModal').style.display = 'block';
+    }
+    
+    // Modal kapatma fonksiyonu
+    function closeModal() {
+        document.getElementById('addSessionModal').style.display = 'none';
+    }
+    
+    // Modal dışına tıklanınca kapat
+    window.onclick = function(event) {
+        const modal = document.getElementById('addSessionModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+    
+    // ESC tuşu ile kapat
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+    
+    // Form gönderildikten sonra modal'ı kapat (başarılı olursa sayfa yenilenecek zaten)
+    document.getElementById('sessionForm').addEventListener('submit', function() {
+        // Form gönderildiğinde modal açık kalabilir, sayfa yenilendiğinde kapanacak
+    });
+    
+    // Not popup fonksiyonları
+    function showNotePopup(noteText) {
+        const popup = document.getElementById('notePopup');
+        const popupBody = document.getElementById('notePopupBody');
+        popupBody.textContent = noteText;
+        popup.style.display = 'block';
+    }
+    
+    function closeNotePopup() {
+        document.getElementById('notePopup').style.display = 'none';
+    }
+    
+    // Not popup dışına tıklanınca kapat
+    window.onclick = function(event) {
+        const addModal = document.getElementById('addSessionModal');
+        const notePopup = document.getElementById('notePopup');
+        
+        if (event.target == addModal) {
+            closeModal();
+        }
+        if (event.target == notePopup) {
+            closeNotePopup();
+        }
+    }
+    
+    // ESC tuşu ile not popup'ı kapat
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeNotePopup();
+        }
+    });
+</script>
+
+<!-- Not Popup -->
+<div id="notePopup" class="note-popup">
+    <div class="note-popup-content">
+        <div class="note-popup-header">
+            <h4>Not</h4>
+            <span class="note-popup-close" onclick="closeNotePopup()">&times;</span>
+        </div>
+        <div class="note-popup-body" id="notePopupBody"></div>
+    </div>
+</div>
+{% endblock %}

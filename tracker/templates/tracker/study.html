@@ -1,0 +1,718 @@
+{% extends 'tracker/dashboard_base.html' %}
+
+{% block title %}Ders Çalış - Studie{% endblock %}
+
+{% block page_title %}Ders Çalış{% endblock %}
+
+{% block content %}
+<style>
+    /* Ana container */
+    .study-container {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    /* Mod seçim butonları */
+    .mode-selector {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .mode-btn {
+        padding: 10px 20px;
+        border: 2px solid #667eea;
+        background-color: white;
+        color: #667eea;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .mode-btn:hover {
+        background-color: #f0f4ff;
+    }
+    
+    .mode-btn.active {
+        background-color: #667eea;
+        color: white;
+    }
+    
+    /* Timer container */
+    .timer-container {
+        background-color: white;
+        border-radius: 15px;
+        padding: 60px 40px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    /* Süre gösterimi */
+    .timer-display {
+        font-size: 72px;
+        font-weight: 300;
+        color: #333;
+        margin-bottom: 40px;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 2px;
+    }
+    
+    /* Geri sayım için input */
+    .countdown-input-container {
+        margin-bottom: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .countdown-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .countdown-input {
+        font-size: 56px;
+        padding: 20px 30px;
+        border: 3px solid #e0e0e0;
+        border-radius: 12px;
+        text-align: center;
+        width: 180px;
+        font-weight: 400;
+        color: #333;
+        transition: all 0.3s ease;
+        background-color: #fafafa;
+    }
+    
+    .countdown-input:focus {
+        outline: none;
+        border-color: #667eea;
+        background-color: white;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .countdown-input:disabled {
+        background-color: #f5f5f5;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    .countdown-label {
+        font-size: 20px;
+        color: #666;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Butonlar */
+    .timer-controls {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        padding: 15px 35px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 120px;
+    }
+    
+    /* Disabled class ile görsel durum - butonlar her zaman tıklanabilir ama görsel olarak disabled görünür */
+    .control-btn.btn-disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Disabled class olan butonlarda hover efektleri çalışsın ama tıklama işe yaramaz */
+    .control-btn.btn-disabled:hover {
+        opacity: 0.6;
+    }
+    
+    .btn-start {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-start:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-pause {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    .btn-pause:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+    }
+    
+    .btn-reset {
+        background-color: #e0e0e0;
+        color: #333;
+    }
+    
+    .btn-reset:hover {
+        background-color: #d0d0d0;
+        transform: translateY(-2px);
+    }
+    
+    
+    /* Gizli mod */
+    .hidden {
+        display: none;
+    }
+    
+    /* Çalışmalarıma ekle butonu */
+    .btn-add-to-sessions {
+        background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);
+        color: white;
+        padding: 15px 35px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 120px;
+        margin-top: 10px;
+    }
+    
+    .btn-add-to-sessions:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(44, 90, 160, 0.4);
+        background: linear-gradient(135deg, #3a6bb8 0%, #2a4f8a 100%);
+    }
+    
+    .btn-add-to-sessions:disabled {
+        background: linear-gradient(135deg, #b0b0b0 0%, #8a8a8a 100%);
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Modal stili */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: opacity 0.2s;
+    }
+    
+    .close:hover {
+        opacity: 0.7;
+    }
+    
+    .modal-body {
+        padding: 25px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+        box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+</style>
+
+<div class="study-container">
+    <!-- Mod seçim butonları -->
+    <div class="mode-selector">
+        <button class="mode-btn active" id="stopwatchBtn" onclick="switchMode('stopwatch')">Süre Tutucu</button>
+        <button class="mode-btn" id="countdownBtn" onclick="switchMode('countdown')">Geri Sayım</button>
+    </div>
+    
+    <!-- Timer container -->
+    <div class="timer-container">
+        <!-- Süre Tutucu Modu -->
+        <div id="stopwatchMode">
+            <div class="timer-display" id="stopwatchDisplay">00:00:00</div>
+            <div class="timer-controls">
+                <button class="control-btn btn-start" id="startBtn" onclick="startStopwatch()">Başlat</button>
+                <button class="control-btn btn-pause" id="pauseBtn" onclick="pauseStopwatch()">Durdur</button>
+                <button class="control-btn btn-reset" id="resetBtn" onclick="resetStopwatch()">Sıfırla</button>
+            </div>
+            <div style="display: flex; justify-content: center; margin-top: 15px;">
+                <button class="btn-add-to-sessions" id="addToSessionsBtn" onclick="openAddSessionModal()" disabled>Çalışmalarıma Ekle</button>
+            </div>
+        </div>
+        
+        <!-- Geri Sayım Modu -->
+        <div id="countdownMode" class="hidden">
+            <div class="countdown-input-container">
+                <div class="countdown-input-wrapper">
+                    <input type="number" 
+                           class="countdown-input" 
+                           id="minutesInput" 
+                           min="1" 
+                           max="999" 
+                           value="25" 
+                           placeholder="0">
+                    <span class="countdown-label">Dakika</span>
+                </div>
+            </div>
+            <div class="timer-display" id="countdownDisplay">25:00</div>
+            <div class="timer-controls">
+                <button class="control-btn btn-start" id="countdownStartBtn" onclick="startCountdown()">Başlat</button>
+                <button class="control-btn btn-pause" id="countdownPauseBtn" onclick="pauseCountdown()" disabled>Durdur</button>
+                <button class="control-btn btn-reset" id="countdownResetBtn" onclick="resetCountdown()">Sıfırla</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal - Çalışma Kaydı Ekle -->
+<div id="addSessionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Çalışma Kaydı Ekle</h3>
+            <span class="close" onclick="closeAddSessionModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form method="post" id="sessionForm">
+                {% csrf_token %}
+                <input type="hidden" name="add_session" value="1">
+                
+                <div class="form-group">
+                    <label for="{{ form.subject.id_for_label }}">{{ form.subject.label }}</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                            {{ form.subject.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.duration.id_for_label }}">{{ form.duration.label }}</label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="id_duration" 
+                               name="duration" 
+                               min="1" 
+                               required
+                               readonly>
+                        {% if form.duration.errors %}
+                            <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                                {{ form.duration.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_date">{{ form.date.label }}</label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="id_date" 
+                               name="date" 
+                               required>
+                        {% if form.date.errors %}
+                            <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                                {{ form.date.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
+                    {{ form.note }}
+                    {% if form.note.errors %}
+                        <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                            {{ form.note.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn-primary">Dersi Kaydet</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Süre tutucu değişkenleri
+    let stopwatchInterval = null;
+    let stopwatchSeconds = 0;
+    let stopwatchRunning = false;
+    
+    // Geri sayım değişkenleri
+    let countdownInterval = null;
+    let countdownSeconds = 0;
+    let countdownRunning = false;
+    let originalMinutes = 25;
+    
+    // Mod değiştirme fonksiyonu
+    function switchMode(mode) {
+        const stopwatchMode = document.getElementById('stopwatchMode');
+        const countdownMode = document.getElementById('countdownMode');
+        const stopwatchBtn = document.getElementById('stopwatchBtn');
+        const countdownBtn = document.getElementById('countdownBtn');
+        
+        if (mode === 'stopwatch') {
+            // Süre tutucu moduna geç
+            stopwatchMode.classList.remove('hidden');
+            countdownMode.classList.add('hidden');
+            stopwatchBtn.classList.add('active');
+            countdownBtn.classList.remove('active');
+            
+            // Geri sayımı durdur
+            if (countdownRunning) {
+                pauseCountdown();
+            }
+        } else {
+            // Geri sayım moduna geç
+            stopwatchMode.classList.add('hidden');
+            countdownMode.classList.remove('hidden');
+            stopwatchBtn.classList.remove('active');
+            countdownBtn.classList.add('active');
+            
+            // Süre tutucuyu durdur
+            if (stopwatchRunning) {
+                pauseStopwatch();
+            }
+        }
+    }
+    
+    // Süre tutucu fonksiyonları
+    // Buton durumlarını takip eden değişkenler
+    let canStart = true;
+    let canPause = false;
+    let canReset = false;
+    
+    function startStopwatch() {
+        // Eğer zaten çalışıyorsa veya başlatılamazsa işlem yapma
+        if (stopwatchRunning || !canStart) {
+            return;
+        }
+        stopwatchRunning = true;
+        stopwatchInterval = setInterval(updateStopwatch, 1000);
+        canStart = false;
+        canPause = true;
+        canReset = true;
+        updateButtonStates();
+    }
+    
+    function pauseStopwatch() {
+        // Eğer çalışmıyorsa veya durdurulamazsa işlem yapma
+        if (!stopwatchRunning || !canPause) {
+            return;
+        }
+        stopwatchRunning = false;
+        clearInterval(stopwatchInterval);
+        canStart = true;
+        canPause = false;
+        updateButtonStates();
+    }
+    
+    function resetStopwatch() {
+        // Eğer sıfırlanamazsa işlem yapma
+        if (!canReset || stopwatchSeconds === 0) {
+            return;
+        }
+        pauseStopwatch();
+        stopwatchSeconds = 0;
+        updateStopwatchDisplay();
+        canStart = true;
+        canPause = false;
+        canReset = false;
+        document.getElementById('addToSessionsBtn').disabled = true;
+        updateButtonStates();
+    }
+    
+    // Buton görsel durumlarını güncelle (disabled class ekle/kaldır)
+    function updateButtonStates() {
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        if (canStart) {
+            startBtn.classList.remove('btn-disabled');
+        } else {
+            startBtn.classList.add('btn-disabled');
+        }
+        
+        if (canPause) {
+            pauseBtn.classList.remove('btn-disabled');
+        } else {
+            pauseBtn.classList.add('btn-disabled');
+        }
+        
+        if (canReset) {
+            resetBtn.classList.remove('btn-disabled');
+        } else {
+            resetBtn.classList.add('btn-disabled');
+        }
+    }
+    
+    function updateStopwatch() {
+        stopwatchSeconds++;
+        updateStopwatchDisplay();
+        
+        // 1 dakika (60 saniye) geçtikten sonra "Çalışmalarıma Ekle" butonunu aktif et
+        if (stopwatchSeconds >= 60) {
+            document.getElementById('addToSessionsBtn').disabled = false;
+        }
+        
+        // Süre 0'dan büyükse Sıfırla butonunu aktif et
+        if (stopwatchSeconds > 0) {
+            canReset = true;
+            updateButtonStates();
+        }
+    }
+    
+    function updateStopwatchDisplay() {
+        const hours = Math.floor(stopwatchSeconds / 3600);
+        const minutes = Math.floor((stopwatchSeconds % 3600) / 60);
+        const seconds = stopwatchSeconds % 60;
+        
+        const display = String(hours).padStart(2, '0') + ':' + 
+                       String(minutes).padStart(2, '0') + ':' + 
+                       String(seconds).padStart(2, '0');
+        document.getElementById('stopwatchDisplay').textContent = display;
+    }
+    
+    // Geri sayım fonksiyonları
+    function startCountdown() {
+        if (!countdownRunning) {
+            const minutesInput = document.getElementById('minutesInput');
+            const minutes = parseInt(minutesInput.value) || 0;
+            
+            if (minutes <= 0) {
+                alert('Lütfen geçerli bir dakika değeri girin (1-999)');
+                return;
+            }
+            
+            // İlk başlatmada dakika değerini kaydet
+            if (countdownSeconds === 0) {
+                originalMinutes = minutes;
+                countdownSeconds = minutes * 60;
+            }
+            
+            countdownRunning = true;
+            countdownInterval = setInterval(updateCountdown, 1000);
+            document.getElementById('countdownStartBtn').disabled = true;
+            document.getElementById('countdownPauseBtn').disabled = false;
+            minutesInput.disabled = true;
+        }
+    }
+    
+    function pauseCountdown() {
+        if (countdownRunning) {
+            countdownRunning = false;
+            clearInterval(countdownInterval);
+            document.getElementById('countdownStartBtn').disabled = false;
+            document.getElementById('countdownPauseBtn').disabled = true;
+        }
+    }
+    
+    function resetCountdown() {
+        pauseCountdown();
+        const minutesInput = document.getElementById('minutesInput');
+        countdownSeconds = 0;
+        originalMinutes = parseInt(minutesInput.value) || 25;
+        countdownSeconds = originalMinutes * 60;
+        updateCountdownDisplay();
+        document.getElementById('countdownStartBtn').disabled = false;
+        document.getElementById('countdownPauseBtn').disabled = true;
+        minutesInput.disabled = false;
+    }
+    
+    function updateCountdown() {
+        if (countdownSeconds > 0) {
+            countdownSeconds--;
+            updateCountdownDisplay();
+        } else {
+            // Geri sayım bitti
+            pauseCountdown();
+            alert('Süre doldu! 🎉');
+            resetCountdown();
+        }
+    }
+    
+    function updateCountdownDisplay() {
+        const minutes = Math.floor(countdownSeconds / 60);
+        const seconds = countdownSeconds % 60;
+        
+        const display = String(minutes).padStart(2, '0') + ':' + 
+                       String(seconds).padStart(2, '0');
+        document.getElementById('countdownDisplay').textContent = display;
+    }
+    
+    // Sayfa yüklendiğinde geri sayımı başlat ve buton durumlarını ayarla
+    window.addEventListener('DOMContentLoaded', function() {
+        const minutesInput = document.getElementById('minutesInput');
+        originalMinutes = parseInt(minutesInput.value) || 25;
+        countdownSeconds = originalMinutes * 60;
+        updateCountdownDisplay();
+        
+        // Başlangıç buton durumlarını ayarla
+        canStart = true;
+        canPause = false;
+        canReset = false;
+        updateButtonStates();
+        
+        // Input değeri değiştiğinde timer'ı güncelle (geri sayım çalışmıyorsa)
+        minutesInput.addEventListener('input', function() {
+            if (!countdownRunning) {
+                const minutes = parseInt(this.value) || 0;
+                if (minutes > 0 && minutes <= 999) {
+                    countdownSeconds = minutes * 60;
+                    updateCountdownDisplay();
+                }
+            }
+        });
+    });
+    
+    // Çalışma kaydı ekleme modal fonksiyonları
+    function openAddSessionModal() {
+        // Süre tutucudaki süreyi dakikaya çevir (saniye kısmını at)
+        const totalMinutes = Math.floor(stopwatchSeconds / 60);
+        
+        // Form alanlarını doldur
+        document.getElementById('id_duration').value = totalMinutes;
+        
+        // Bugünün tarihini ayarla
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('id_date').value = `${year}-${month}-${day}`;
+        
+        // Modal'ı aç
+        document.getElementById('addSessionModal').style.display = 'block';
+    }
+    
+    function closeAddSessionModal() {
+        document.getElementById('addSessionModal').style.display = 'none';
+    }
+    
+    // Modal dışına tıklanınca kapat
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('addSessionModal');
+        if (event.target == modal) {
+            closeAddSessionModal();
+        }
+    });
+    
+    // ESC tuşu ile modal'ı kapat
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeAddSessionModal();
+        }
+    });
+</script>
+{% endblock %}
+

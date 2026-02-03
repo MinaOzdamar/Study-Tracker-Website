@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Studie{% endblock %}</title>
+    <style>
+        /* Genel stil ayarları */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar (Sol menü) */
+        .sidebar {
+            width: 260px;
+            background-color: #ffffff;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Sidebar başlık bölümü */
+        .sidebar-header {
+            padding: 25px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-header .username {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        /* Menü öğeleri */
+        .sidebar-menu {
+            flex: 1;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        
+        .menu-item {
+            display: block;
+            padding: 15px 25px;
+            color: #555;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .menu-item:hover {
+            background-color: #f8f9fa;
+            border-left-color: #667eea;
+            color: #667eea;
+            padding-left: 30px;
+        }
+        
+        .menu-item.active {
+            background-color: #f0f4ff;
+            border-left-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        /* Çıkış butonu özel stil */
+        .menu-item.logout {
+            margin-top: auto;
+            border-top: 1px solid #e9ecef;
+            color: #dc3545;
+        }
+        
+        .menu-item.logout:hover {
+            background-color: #fff5f5;
+            border-left-color: #dc3545;
+            color: #dc3545;
+        }
+        
+        /* Ana içerik alanı */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+        
+        /* İçerik başlığı */
+        .content-header {
+            background-color: white;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .content-header h1 {
+            font-size: 28px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        /* İçerik kartı */
+        .content-card {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Mesaj bildirimleri */
+        .messages {
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid;
+        }
+        
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #28a745;
+        }
+        
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #dc3545;
+        }
+        
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-color: #17a2b8;
+        }
+        
+        /* Mobil uyumluluk için hamburger menü butonu */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        /* Mobil görünüm için responsive tasarım */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+            
+            .content-header {
+                padding: 20px;
+            }
+            
+            .content-card {
+                padding: 20px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Hamburger menü butonu (mobil için) -->
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <!-- Sol sidebar menü -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>Studie</h2>
+            <div class="username">{{ user.username }}</div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="{% url 'tracker:index' %}" class="menu-item {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                Ana Sayfa
+            </a>
+            <a href="{% url 'tracker:todo_list' %}" class="menu-item {% if request.resolver_match.url_name == 'todo_list' %}active{% endif %}">
+                To do list
+            </a>
+            <a href="{% url 'tracker:study_tracking' %}" class="menu-item {% if request.resolver_match.url_name == 'study_tracking' %}active{% endif %}">
+                Çalışma Takibi
+            </a>
+            <a href="{% url 'tracker:study' %}" class="menu-item {% if request.resolver_match.url_name == 'study' %}active{% endif %}">
+                Ders Çalış
+            </a>
+            <a href="#" class="menu-item">
+                İstatistikler
+            </a>
+            <a href="{% url 'tracker:logout' %}" class="menu-item logout">
+                Çıkış Yap
+            </a>
+        </nav>
+    </aside>
+    
+    <!-- Ana içerik alanı -->
+    <main class="main-content">
+        <!-- Mesaj bildirimleri -->
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Sayfa başlığı -->
+        {% block page_header %}
+        <div class="content-header">
+            <h1>{% block page_title %}Hoş Geldiniz{% endblock %}</h1>
+        </div>
+        {% endblock %}
+        
+        <!-- Sayfa içeriği -->
+        <div class="content-card">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <script>
+        // Sidebar açma/kapama fonksiyonu (mobil için)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Mobil görünümde sidebar dışına tıklanınca kapat
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(event.target) && !menuToggle.contains(event.target)) {
+                    sidebar.classList.remove('open');
+                }
+            }
+        });
+        
+        // Pencere boyutu değiştiğinde sidebar'ı kontrol et
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('open');
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

@@ -1,0 +1,82 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Giriş Yap - Studie{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding-top: 0;
+    }
+    
+    .site-title {
+        text-align: center;
+        font-size: 48px;
+        font-weight: 700;
+        color: white;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        letter-spacing: 2px;
+        width: 100%;
+    }
+    
+    .container {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block before_container %}
+<div class="site-title">Studie</div>
+{% endblock %}
+
+{% block content %}
+<h1>Giriş Yap</h1>
+
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        <label for="id_username">Kullanıcı Adı:</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+            <ul class="errorlist">
+                {% for error in form.username.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        <label for="id_password">Şifre:</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+            <ul class="errorlist">
+                {% for error in form.password.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    
+    {% if form.non_field_errors %}
+        <ul class="errorlist">
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    
+    <button type="submit" class="btn">Giriş Yap</button>
+</form>
+
+<div class="link-text">
+    Hesabınız yok mu? <a href="{% url 'tracker:signup' %}">Hesap Oluştur</a>
+</div>
+{% endblock %}
+

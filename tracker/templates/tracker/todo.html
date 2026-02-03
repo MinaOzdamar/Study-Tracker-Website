@@ -1,0 +1,782 @@
+{% extends 'tracker/dashboard_base.html' %}
+
+{% block title %}To do list - Studie{% endblock %}
+
+{% block page_title %}To do list{% endblock %}
+
+{% block content %}
+<style>
+    /* Ana container */
+    .todo-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    /* İstatistik kartları */
+    .todo-stats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 18px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        text-align: center;
+        min-width: 100px;
+    }
+    
+    .stat-card.secondary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        box-shadow: 0 2px 8px rgba(245, 87, 108, 0.3);
+    }
+    
+    .stat-card.success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+    }
+    
+    .stat-label {
+        font-size: 11px;
+        opacity: 0.9;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+    }
+    
+    /* Yeni görev ekleme formu */
+    .add-todo-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .add-todo-section h3 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-add {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-add:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Görev listesi */
+    .todos-section {
+        margin-top: 30px;
+        background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%);
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        gap: 15px;
+    }
+    
+    .section-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .filter-section {
+        margin-bottom: 20px;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .btn-filter {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(245, 87, 108, 0.3);
+    }
+    
+    .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(245, 87, 108, 0.4);
+    }
+    
+    /* Dropdown menü */
+    .filter-dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 8px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        min-width: 200px;
+        z-index: 1000;
+        overflow: hidden;
+    }
+    
+    .filter-dropdown.show {
+        display: block;
+    }
+    
+    .filter-option {
+        display: block;
+        padding: 12px 16px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.2s;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+    }
+    
+    .filter-option:last-child {
+        border-bottom: none;
+    }
+    
+    .filter-option:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .filter-option.active {
+        background-color: #f0f4ff;
+        color: #667eea;
+        font-weight: 600;
+    }
+    
+    .todo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    /* Görev kartı */
+    .todo-item {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        border-left: 4px solid #667eea;
+    }
+    
+    .todo-item:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+    
+    .todo-item.completed {
+        opacity: 0.7;
+        border-left-color: #4caf50;
+    }
+    
+    .todo-item.completed .todo-title {
+        text-decoration: line-through;
+        color: #999;
+    }
+    
+    .todo-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 0;
+    }
+    
+    .todo-content {
+        flex: 1;
+        min-width: 0; /* Flexbox'ta text overflow için gerekli */
+    }
+    
+    .todo-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        line-height: 1.4;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        /* İlk 50 karakter için genişlik sınırı - yaklaşık 50 karakter genişliği */
+        max-width: 50ch;
+        white-space: normal;
+    }
+    
+    .todo-description {
+        font-size: 14px;
+        color: #666;
+        line-height: 1.5;
+        margin-top: 8px;
+    }
+    
+    .todo-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+    }
+    
+    .todo-date {
+        font-size: 12px;
+        color: #999;
+        margin-top: 5px;
+    }
+    
+    .todo-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .btn-action {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-toggle {
+        background-color: #4caf50;
+        color: white;
+    }
+    
+    .btn-toggle:hover {
+        background-color: #45a049;
+    }
+    
+    .btn-delete {
+        background-color: #f44336;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background-color: #da190b;
+    }
+    
+    .btn-edit {
+        background-color: #2196F3;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background-color: #1976D2;
+    }
+    
+    /* Yıldız butonu */
+    .star-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        line-height: 1;
+        transition: all 0.2s ease;
+        color: #999;
+        min-width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .star-btn:hover {
+        color: #666;
+    }
+    
+    .star-btn.star-active {
+        color: #ffd700;
+    }
+    
+    .star-btn.star-active:hover {
+        color: #666;
+    }
+    
+    .star-form {
+        flex-shrink: 0;
+    }
+    
+    /* Boş durum */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+    
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+        font-size: 20px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        font-size: 14px;
+        color: #999;
+    }
+    
+    /* Sayfa navigasyonu */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+    }
+    
+    .page-nav-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        width: 35px;
+        height: 35px;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        text-decoration: none;
+    }
+    
+    .page-nav-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+    }
+    
+    .page-nav-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        opacity: 0.5;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .page-info {
+        font-size: 14px;
+        color: #666;
+        font-weight: 500;
+        padding: 0 10px;
+    }
+    
+    /* Modal stili */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+    }
+    
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 0;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 10px 10px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+    }
+    
+    .close {
+        color: white;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 1;
+        transition: opacity 0.2s;
+    }
+    
+    .close:hover {
+        opacity: 0.7;
+    }
+    
+    .modal-body {
+        padding: 25px;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Görev Ekle Butonu */
+    .btn-add-todo {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        white-space: nowrap;
+    }
+    
+    .btn-add-todo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+</style>
+
+<div class="todo-container">
+    <!-- İstatistikler -->
+    <div class="todo-stats">
+        <div class="stat-card">
+            <div class="stat-label">Toplam Görev</div>
+            <div class="stat-value">{{ total_todos }}</div>
+        </div>
+    </div>
+    
+    <!-- Modal - Yeni Görev Ekle -->
+    <div id="addTodoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Yeni Görev Ekle</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="todoForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="add_todo" value="1">
+                    <div class="form-group">
+                        <label for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+                                {{ form.title.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn-primary">Ekle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal - Görev Düzenle -->
+    <div id="editTodoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Görevi Düzenle</h3>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="editTodoForm" action="">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="editTitle">Görev</label>
+                        <input type="text" id="editTitle" name="title" class="form-control" maxlength="100" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Görev listesi -->
+    <div class="todos-section">
+        <div class="section-header">
+            <h2 class="section-title">Görevlerim</h2>
+            <button class="btn-add-todo" onclick="openModal()" title="Yeni Görev Ekle">Görev ekle +</button>
+        </div>
+        
+        <div class="filter-section">
+            <button class="btn-filter" onclick="toggleFilterDropdown()" title="Görevleri Filtrele">Filtrele</button>
+            <div class="filter-dropdown" id="filterDropdown">
+                <a href="?filter=date_desc{% if current_page > 1 %}&page={{ current_page }}{% endif %}" 
+                   class="filter-option {% if current_filter == 'date_desc' or not current_filter %}active{% endif %}">
+                    Tarihe göre
+                </a>
+                <a href="?filter=date_asc{% if current_page > 1 %}&page={{ current_page }}{% endif %}" 
+                   class="filter-option {% if current_filter == 'date_asc' %}active{% endif %}">
+                    Tersten tarihe göre
+                </a>
+                <a href="?filter=pending{% if current_page > 1 %}&page={{ current_page }}{% endif %}" 
+                   class="filter-option {% if current_filter == 'pending' %}active{% endif %}">
+                    Bekleyenler
+                </a>
+                <a href="?filter=completed{% if current_page > 1 %}&page={{ current_page }}{% endif %}" 
+                   class="filter-option {% if current_filter == 'completed' %}active{% endif %}">
+                    Tamamlananlar
+                </a>
+            </div>
+        </div>
+        
+        {% if todos %}
+            <div class="todo-list">
+                {% for todo in todos %}
+                    <div class="todo-item {% if todo.completed %}completed{% endif %}">
+                        <div class="todo-header">
+                            <div class="todo-content" style="display: flex; align-items: flex-start; gap: 10px; flex: 1;">
+                                <form method="post" style="display: inline; margin: 0;" class="star-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="toggle_important" value="1">
+                                    <input type="hidden" name="todo_id" value="{{ todo.id }}">
+                                    <button type="submit" class="star-btn {% if todo.is_important %}star-active{% endif %}" title="{% if todo.is_important %}Önemli işaretini kaldır{% else %}Önemli olarak işaretle{% endif %}">
+                                        ⭑
+                                    </button>
+                                </form>
+                                <div style="flex: 1;">
+                                    <div class="todo-title">{{ todo.title }}</div>
+                                    <div class="todo-date">
+                                        {{ todo.created_at|date:"d.m.Y H:i" }}{% if todo.is_edited %} - Düzenlendi{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="todo-actions">
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <div style="display: flex; gap: 10px;">
+                                        <form method="post" style="display: inline;">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="toggle_todo" value="1">
+                                            <input type="hidden" name="todo_id" value="{{ todo.id }}">
+                                            <button type="submit" class="btn-action btn-toggle">
+                                                {% if todo.completed %}Tamamlanmadı İşaretle{% else %}Tamamla{% endif %}
+                                            </button>
+                                        </form>
+                                        <form method="post" style="display: inline;" onsubmit="return confirm('Bu görevi silmek istediğinizden emin misiniz?');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delete_todo" value="1">
+                                            <input type="hidden" name="todo_id" value="{{ todo.id }}">
+                                            <button type="submit" class="btn-action btn-delete">Sil</button>
+                                        </form>
+                                    </div>
+                                    <button type="button" class="btn-action btn-edit" onclick="openEditModal({{ todo.id }}, '{{ todo.title|escapejs }}')">Düzenle</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Sayfa navigasyonu -->
+            {% if total_pages > 1 %}
+            <div class="pagination-container">
+                {% if todos.has_previous %}
+                    <a href="?page={{ todos.previous_page_number }}{% if current_filter and current_filter != 'date_desc' %}&filter={{ current_filter }}{% endif %}" class="page-nav-btn" title="Önceki sayfa">‹</a>
+                {% else %}
+                    <span class="page-nav-btn" style="background: #ccc; cursor: not-allowed; opacity: 0.5;" title="İlk sayfa">‹</span>
+                {% endif %}
+                
+                <div class="page-info">{{ current_page }}/{{ total_pages }}</div>
+                
+                {% if todos.has_next %}
+                    <a href="?page={{ todos.next_page_number }}{% if current_filter and current_filter != 'date_desc' %}&filter={{ current_filter }}{% endif %}" class="page-nav-btn" title="Sonraki sayfa">›</a>
+                {% else %}
+                    <span class="page-nav-btn" style="background: #ccc; cursor: not-allowed; opacity: 0.5;" title="Son sayfa">›</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📝</div>
+                <h3>Henüz görev yok</h3>
+                <p>"Görevlerim" başlığının yanındaki "+" butonuna tıklayarak ilk görevinizi ekleyebilirsiniz.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Modal açma fonksiyonu
+    function openModal() {
+        document.getElementById('addTodoModal').style.display = 'block';
+    }
+    
+    // Modal kapatma fonksiyonu
+    function closeModal() {
+        document.getElementById('addTodoModal').style.display = 'none';
+    }
+    
+    // Düzenleme modal'ını açma fonksiyonu
+    function openEditModal(todoId, currentTitle) {
+        const modal = document.getElementById('editTodoModal');
+        const form = document.getElementById('editTodoForm');
+        const titleInput = document.getElementById('editTitle');
+        const currentPage = {{ current_page|default:1 }};
+        const currentFilter = '{{ current_filter|default:"date_desc" }}';
+        
+        // Form action URL'ini ayarla
+        const editUrl = '{% url "tracker:edit_todo" 0 %}'.replace('0', todoId.toString());
+        form.action = editUrl + '?page=' + currentPage + '&filter=' + currentFilter;
+        
+        // Mevcut başlığı input'a yaz
+        titleInput.value = currentTitle;
+        
+        // Modal'ı göster
+        modal.style.display = 'block';
+    }
+    
+    // Düzenleme modal'ını kapatma fonksiyonu
+    function closeEditModal() {
+        document.getElementById('editTodoModal').style.display = 'none';
+    }
+    
+    // Modal ve dropdown dışına tıklanınca kapat
+    window.onclick = function(event) {
+        const addModal = document.getElementById('addTodoModal');
+        const editModal = document.getElementById('editTodoModal');
+        const dropdown = document.getElementById('filterDropdown');
+        const filterBtn = event.target.closest('.btn-filter');
+        
+        if (event.target == addModal) {
+            closeModal();
+        }
+        
+        if (event.target == editModal) {
+            closeEditModal();
+        }
+        
+        if (!filterBtn && !event.target.closest('.filter-dropdown')) {
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+        }
+    }
+    
+    // ESC tuşu ile kapat
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+            closeEditModal();
+            const dropdown = document.getElementById('filterDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
+        }
+    });
+    
+    // Filtrele dropdown menüsü açma/kapama
+    function toggleFilterDropdown() {
+        const dropdown = document.getElementById('filterDropdown');
+        if (dropdown) {
+            dropdown.classList.toggle('show');
+        }
+    }
+</script>
+{% endblock %}
+
