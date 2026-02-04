@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 from .models import StudySession, TodoItem
 
 
@@ -73,4 +74,21 @@ class TodoForm(forms.ModelForm):
                 'maxlength': 100,
             }),
         }
+
+
+class CustomUserCreationForm(UserCreationForm):
+    """
+    Özelleştirilmiş kullanıcı kayıt formu.
+    Belirli yardım metinlerini kaldırır.
+    """
+    class Meta(UserCreationForm.Meta):
+        pass
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Kullanıcı adı yardım metnini özelleştir
+        # Sadece "kullanılabilecek karakterler" kısmını göster
+        self.fields['username'].help_text = "Sadece harfler, rakamlar ve @/./+/-/_ karakterleri."
+        # Şifre tekrar yardım metnini kaldır ("Doğrulama için önceki gibi aynı parolayı girin.")
+        self.fields['password2'].help_text = None
 

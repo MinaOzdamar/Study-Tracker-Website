@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm
+from .forms import CustomUserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
@@ -13,74 +14,60 @@ from .forms import StudySessionForm, TodoForm
 
 def login_view(request):
     """
-    Kullanıcı giriş sayfası view'ı.
+    Kullanıcı giriş ve kayıt sayfası view'ı.
     
-    GET isteğinde giriş formunu gösterir.
-    POST isteğinde kullanıcı bilgilerini doğrular ve giriş yapar.
+    GET isteğinde giriş ve kayıt formlarını gösterir.
+    POST isteğinde kullanıcı girişi veya kayıt işlemini yapar.
     """
     # Eğer kullanıcı zaten giriş yapmışsa ana sayfaya yönlendir
     if request.user.is_authenticated:
         return redirect('tracker:index')
     
+    login_form = None
+    signup_form = None
+    is_signup = False
+    
     if request.method == 'POST':
-        # Giriş formunu oluştur ve POST verileriyle doldur
-        form = AuthenticationForm(request, data=request.POST)
-        
-        if form.is_valid():
-            # Form geçerliyse kullanıcı bilgilerini al
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            
-            # Kullanıcıyı doğrula
-            user = authenticate(username=username, password=password)
-            
-            if user is not None:
-                # Kullanıcı doğrulandıysa giriş yap
+        # Hangi form gönderildiğini kontrol et
+        if 'login' in request.POST:
+            # Giriş formu gönderildi
+            login_form = AuthenticationForm(request, data=request.POST)
+            if login_form.is_valid():
+                username = login_form.cleaned_data.get('username')
+                password = login_form.cleaned_data.get('password')
+                user = authenticate(username=username, password=password)
+                if user is not None:
+                    login(request, user)
+                    messages.success(request, f'Hoş geldiniz, {username}!')
+                    return redirect('tracker:index')
+                else:
+                    messages.error(request, 'Kullanıcı adı veya şifre hatalı.')
+            else:
+                messages.error(request, 'Lütfen formu doğru şekilde doldurun.')
+        elif 'signup' in request.POST:
+            # Kayıt formu gönderildi
+            signup_form = CustomUserCreationForm(request.POST)
+            if signup_form.is_valid():
+                user = signup_form.save()
                 login(request, user)
-                messages.success(request, f'Hoş geldiniz, {username}!')
+                messages.success(request, f'Hoş geldiniz, {user.username}! Hesabınız başarıyla oluşturuldu.')
                 return redirect('tracker:index')
             else:
-                messages.error(request, 'Kullanıcı adı veya şifre hatalı.')
-        else:
-            messages.error(request, 'Lütfen formu doğru şekilde doldurun.')
+                messages.error(request, 'Lütfen formu doğru şekilde doldurun.')
+                is_signup = True
     else:
-        # GET isteğinde boş form göster
-        form = AuthenticationForm()
+        # GET isteğinde boş formlar göster
+        login_form = AuthenticationForm()
+        signup_form = CustomUserCreationForm()
+        # URL'de signup parametresi varsa kayıt formunu göster
+        if request.GET.get('mode') == 'signup':
+            is_signup = True
     
-    return render(request, 'tracker/login.html', {'form': form})
-
-
-def signup_view(request):
-    """
-    Kullanıcı kayıt sayfası view'ı.
-    
-    GET isteğinde kayıt formunu gösterir.
-    POST isteğinde yeni kullanıcı oluşturur ve giriş yapar.
-    """
-    # Eğer kullanıcı zaten giriş yapmışsa ana sayfaya yönlendir
-    if request.user.is_authenticated:
-        return redirect('tracker:index')
-    
-    if request.method == 'POST':
-        # Kayıt formunu oluştur ve POST verileriyle doldur
-        form = UserCreationForm(request.POST)
-        
-        if form.is_valid():
-            # Yeni kullanıcıyı kaydet
-            user = form.save()
-            
-            # Kullanıcıyı otomatik olarak giriş yap
-            login(request, user)
-            
-            messages.success(request, f'Hesabınız başarıyla oluşturuldu! Hoş geldiniz, {user.username}!')
-            return redirect('tracker:index')
-        else:
-            messages.error(request, 'Lütfen formu doğru şekilde doldurun.')
-    else:
-        # GET isteğinde boş form göster
-        form = UserCreationForm()
-    
-    return render(request, 'tracker/signup.html', {'form': form})
+    return render(request, 'tracker/login.html', {
+        'login_form': login_form or AuthenticationForm(),
+        'signup_form': signup_form or CustomUserCreationForm(),
+        'is_signup': is_signup
+    })
 
 
 @login_required
@@ -340,6 +327,10 @@ def todo_list(request):
             try:
                 todo = TodoItem.objects.get(id=todo_id, user=user)
                 todo.completed = not todo.completed
+                # Eğer görev tamamlandıysa önemli işaretini kaldır
+                if todo.completed and todo.is_important:
+                    todo.is_important = False
+                    todo.important_marked_at = None
                 todo.save()
                 messages.success(request, 'Görev durumu güncellendi!')
             except TodoItem.DoesNotExist:

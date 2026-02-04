@@ -100,13 +100,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',  # Kullanıcı özellikleri benzerliği doğrulayıcısı
-    },
-    {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',  # Minimum uzunluk doğrulayıcısı
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',  # Yaygın şifre doğrulayıcısı
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',  # Sayısal şifre doğrulayıcısı

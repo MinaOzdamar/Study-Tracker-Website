@@ -1,82 +1,514 @@
 {% extends 'tracker/base.html' %}
 
-{% block title %}Giriş Yap - Studie{% endblock %}
+{% block title %}Studie - Çalışma Takip ve Yönetim Platformu{% endblock %}
 
 {% block extra_css %}
 <style>
-    body {
-        background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding-top: 0;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
     
-    .site-title {
-        text-align: center;
-        font-size: 48px;
-        font-weight: 700;
-        color: white;
-        margin-top: 40px;
-        margin-bottom: 20px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        letter-spacing: 2px;
-        width: 100%;
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(180deg, #E8F4F8 0%, #D6EBF5 25%, #C8E3F0 50%, #B8DCE8 75%, #A8D0E0 100%);
+        min-height: 100vh;
+        padding: 0;
+        margin: 0;
+        display: block !important;
+        justify-content: normal !important;
+        align-items: normal !important;
     }
     
     .container {
-        margin-top: 0;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    .messages {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .message {
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(180deg, rgba(232, 244, 248, 0.95) 0%, rgba(214, 235, 245, 0.95) 25%, rgba(200, 227, 240, 0.95) 50%, rgba(184, 220, 232, 0.95) 75%, rgba(168, 208, 224, 0.95) 100%);
+        padding: 60px 20px 40px;
+        text-align: center;
+        color: white;
+    }
+    
+    .hero-title {
+        font-size: 52px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        letter-spacing: 2px;
+        color: white;
+    }
+    
+    .hero-subtitle {
+        font-size: 20px;
+        margin-bottom: 25px;
+        opacity: 0.95;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .hero-description {
+        font-size: 16px;
+        max-width: 700px;
+        margin: 0 auto 30px;
+        line-height: 1.6;
+        opacity: 0.9;
+    }
+    
+    /* Main Content */
+    .main-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 50px;
+        align-items: start;
+    }
+    
+    /* Login Form Section */
+    .login-section {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        position: sticky;
+        top: 40px;
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .login-header h2 {
+        color: #333;
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    
+    .form-group {
+        margin-bottom: 18px;
+    }
+    
+    #signup-form .form-group {
+        margin-bottom: 18px;
+    }
+    
+    .help-text {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #666;
+        line-height: 1.4;
+    }
+    
+    .form-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #555;
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-arrow {
+        font-size: 20px;
+        transition: transform 0.3s ease;
+    }
+    
+    .btn:hover .btn-arrow {
+        transform: translateX(5px);
+    }
+    
+    .link-text {
+        text-align: center;
+        padding-top: 18px;
+        border-top: 1px solid #e0e0e0;
+        margin-top: 20px;
+        color: #666;
+        font-size: 13px;
+    }
+    
+    .link-text a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    
+    .link-text a:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+    
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0 0;
+    }
+    
+    .errorlist li {
+        color: #dc3545;
+        font-size: 13px;
+        padding: 5px 0;
+    }
+    
+    /* Features Section */
+    .features-section {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    
+    .features-section h3 {
+        text-align: center;
+        color: #333;
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 30px;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .feature-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 24px;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        border-color: #667eea;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    }
+    
+    .feature-icon {
+        font-size: 40px;
+        flex-shrink: 0;
+    }
+    
+    .feature-content h4 {
+        color: #333;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    
+    .feature-content p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 968px) {
+        .main-content {
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+        
+        .login-section {
+            position: static;
+        }
+        
+        .hero-title {
+            font-size: 48px;
+        }
+        
+        .hero-subtitle {
+            font-size: 20px;
+        }
+    }
+    
+    @media (max-width: 600px) {
+        .hero-section {
+            padding: 60px 20px 40px;
+        }
+        
+        .hero-title {
+            font-size: 36px;
+        }
+        
+        .hero-subtitle {
+            font-size: 18px;
+        }
+        
+        .hero-description {
+            font-size: 16px;
+        }
+        
+        .login-section,
+        .features-section {
+            padding: 30px 20px;
+        }
+        
+        .feature-card {
+            flex-direction: column;
+            text-align: center;
+        }
     }
 </style>
 {% endblock %}
 
 {% block before_container %}
-<div class="site-title">Studie</div>
-{% endblock %}
-
-{% block content %}
-<h1>Giriş Yap</h1>
-
-<form method="post">
-    {% csrf_token %}
-    
-    <div class="form-group">
-        <label for="id_username">Kullanıcı Adı:</label>
-        {{ form.username }}
-        {% if form.username.errors %}
-            <ul class="errorlist">
-                {% for error in form.username.errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    </div>
-    
-    <div class="form-group">
-        <label for="id_password">Şifre:</label>
-        {{ form.password }}
-        {% if form.password.errors %}
-            <ul class="errorlist">
-                {% for error in form.password.errors %}
-                    <li>{{ error }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    </div>
-    
-    {% if form.non_field_errors %}
-        <ul class="errorlist">
-            {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-    
-    <button type="submit" class="btn">Giriş Yap</button>
-</form>
-
-<div class="link-text">
-    Hesabınız yok mu? <a href="{% url 'tracker:signup' %}">Hesap Oluştur</a>
+<!-- Hero Section -->
+<div class="hero-section">
+    <h1 class="hero-title">Studie</h1>
+    <p class="hero-subtitle">Çalışma Takip ve Yönetim Platformu</p>
+    <p class="hero-description">
+        Çalışma sürelerinizi takip edin, görevlerinizi yönetin ve verimliliğinizi artırın. 
+        Studie ile çalışma alışkanlıklarınızı analiz edin ve hedeflerinize ulaşın.
+    </p>
 </div>
 {% endblock %}
 
+{% block content %}
+<div class="main-content">
+    <!-- Login/Signup Form -->
+    <div class="login-section">
+        <div class="login-header">
+            <h2 id="form-title">{% if is_signup %}Hesap Oluştur{% else %}Giriş Yap{% endif %}</h2>
+        </div>
+
+        <!-- Login Form -->
+        <form method="post" id="login-form" {% if is_signup %}style="display: none;"{% endif %}>
+            {% csrf_token %}
+            <input type="hidden" name="login" value="1">
+            
+            <div class="form-group">
+                <label for="id_username">👤 Kullanıcı Adı</label>
+                {{ login_form.username }}
+                {% if login_form.username.errors %}
+                    <ul class="errorlist">
+                        {% for error in login_form.username.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password">🔒 Şifre</label>
+                {{ login_form.password }}
+                {% if login_form.password.errors %}
+                    <ul class="errorlist">
+                        {% for error in login_form.password.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            {% if login_form.non_field_errors %}
+                <ul class="errorlist">
+                    {% for error in login_form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            
+            <button type="submit" class="btn">
+                <span>Giriş Yap</span>
+                <span class="btn-arrow">→</span>
+            </button>
+        </form>
+
+        <!-- Signup Form -->
+        <form method="post" id="signup-form" {% if not is_signup %}style="display: none;"{% endif %}>
+            {% csrf_token %}
+            <input type="hidden" name="signup" value="1">
+            
+            <div class="form-group">
+                <label for="id_username_signup">👤 Kullanıcı Adı</label>
+                {{ signup_form.username }}
+                {% if signup_form.username.errors %}
+                    <ul class="errorlist">
+                        {% for error in signup_form.username.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if signup_form.username.help_text %}
+                    <small class="help-text">{{ signup_form.username.help_text }}</small>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password1">🔒 Şifre</label>
+                {{ signup_form.password1 }}
+                {% if signup_form.password1.errors %}
+                    <ul class="errorlist">
+                        {% for error in signup_form.password1.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if signup_form.password1.help_text %}
+                    <small class="help-text">{{ signup_form.password1.help_text }}</small>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="id_password2">🔒 Şifre Tekrar</label>
+                {{ signup_form.password2 }}
+                {% if signup_form.password2.errors %}
+                    <ul class="errorlist">
+                        {% for error in signup_form.password2.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            {% if signup_form.non_field_errors %}
+                <ul class="errorlist">
+                    {% for error in signup_form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            
+            <button type="submit" class="btn">
+                <span>Hesap Oluştur</span>
+                <span class="btn-arrow">→</span>
+            </button>
+        </form>
+
+        <div class="link-text">
+            <span id="switch-text">
+                {% if is_signup %}
+                    Zaten hesabınız var mı? <a href="#" onclick="switchToLogin(); return false;">Giriş Yap</a>
+                {% else %}
+                    Hesabınız yok mu? <a href="#" onclick="switchToSignup(); return false;">Hesap Oluştur</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="features-section">
+        <h3>Neler Yapabilirsiniz?</h3>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📚</div>
+                <div class="feature-content">
+                    <h4>Çalışma Takibi</h4>
+                    <p>Ders çalışma sürelerinizi detaylı bir şekilde kaydedin, günlük ve haftalık istatistiklerinizi görüntüleyin. Hangi derslere ne kadar zaman ayırdığınızı takip edin.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⏱️</div>
+                <div class="feature-content">
+                    <h4>Süre Tutucu</h4>
+                    <p>Gelişmiş süre tutucu ve geri sayım özellikleri ile verimli çalışın. Pomodoro tekniği uygulayın ve çalışma oturumlarınızı otomatik olarak kaydedin.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✅</div>
+                <div class="feature-content">
+                    <h4>Görev Yönetimi</h4>
+                    <p>Yapılacaklar listenizle görevlerinizi organize edin, önemli görevleri işaretleyin ve tamamlanan görevleri takip edin. Üretkenliğinizi artırın.</p>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-content">
+                    <h4>İstatistikler</h4>
+                    <p>Çalışma alışkanlıklarınızı analiz edin, günlük seri (streak) takibinizi yapın ve ilerlemenizi görselleştirin. Hedeflerinize ulaşın.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchToSignup() {
+        document.getElementById('login-form').style.display = 'none';
+        document.getElementById('signup-form').style.display = 'block';
+        document.getElementById('form-title').textContent = 'Hesap Oluştur';
+        document.getElementById('switch-text').innerHTML = 'Zaten hesabınız var mı? <a href="#" onclick="switchToLogin(); return false;">Giriş Yap</a>';
+    }
+    
+    function switchToLogin() {
+        document.getElementById('signup-form').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
+        document.getElementById('form-title').textContent = 'Giriş Yap';
+        document.getElementById('switch-text').innerHTML = 'Hesabınız yok mu? <a href="#" onclick="switchToSignup(); return false;">Hesap Oluştur</a>';
+    }
+</script>
+{% endblock %}
