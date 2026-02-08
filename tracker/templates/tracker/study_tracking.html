@@ -124,7 +124,7 @@
     }
     
     .btn-add {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         color: white;
         padding: 10px 20px;
         border: none;
@@ -137,7 +137,7 @@
     
     .btn-add:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
     }
     
     .section-header {
@@ -392,7 +392,7 @@
     }
     
     .date-nav-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         color: white;
         border: none;
         border-radius: 50%;
@@ -409,7 +409,7 @@
     
     .date-nav-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
     }
     
     .date-nav-btn:disabled {
@@ -567,8 +567,8 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{% url 'tracker:edit_session' session.id %}" class="btn-edit">Düzenle</a>
-                                    <a href="{% url 'tracker:delete_session' session.id %}" class="btn-delete">Sil</a>
+                                    <a href="{% url 'tracker:edit_session' session.id %}?date={{ selected_date|date:'Y-m-d' }}" class="btn-edit">Düzenle</a>
+                                    <a href="{% url 'tracker:delete_session' session.id %}?date={{ selected_date|date:'Y-m-d' }}" class="btn-delete">Sil</a>
                                 </div>
                             </td>
                         </tr>

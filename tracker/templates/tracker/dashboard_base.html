@@ -223,7 +223,7 @@
                 Ana Sayfa
             </a>
             <a href="{% url 'tracker:todo_list' %}" class="menu-item {% if request.resolver_match.url_name == 'todo_list' %}active{% endif %}">
-                To do list
+                Yapılacaklar Listesi
             </a>
             <a href="{% url 'tracker:study_tracking' %}" class="menu-item {% if request.resolver_match.url_name == 'study_tracking' %}active{% endif %}">
                 Çalışma Takibi
@@ -231,7 +231,7 @@
             <a href="{% url 'tracker:study' %}" class="menu-item {% if request.resolver_match.url_name == 'study' %}active{% endif %}">
                 Ders Çalış
             </a>
-            <a href="#" class="menu-item">
+            <a href="{% url 'tracker:statistics' %}" class="menu-item {% if request.resolver_match.url_name == 'statistics' %}active{% endif %}">
                 İstatistikler
             </a>
             <a href="{% url 'tracker:logout' %}" class="menu-item logout">

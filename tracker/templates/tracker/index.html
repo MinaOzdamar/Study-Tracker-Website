@@ -2,16 +2,22 @@
 
 {% block title %}Ana Sayfa - Studie{% endblock %}
 
-{% block page_title %}Hoş Geldiniz, {{ user.username }}!{% endblock %}
+{% block page_title %}Ana Sayfa{% endblock %}
 
 {% block extra_css %}
 <style>
     /* İstatistik kartları */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: 2fr 2fr 1fr;
         gap: 20px;
         margin-bottom: 30px;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
     }
     
     .stat-card {
@@ -25,6 +31,11 @@
     .stat-card.secondary {
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+    }
+    
+    .stat-card.blue {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
     }
     
     .stat-label {
@@ -169,6 +180,13 @@
         <div class="stat-label">Günlük Seri (Streak)</div>
         <div class="stat-value">{{ streak }}</div>
         <div class="stat-unit">gün</div>
+    </div>
+    
+    <!-- Görev Sayısı -->
+    <div class="stat-card blue">
+        <div class="stat-label">Görev Sayısı</div>
+        <div class="stat-value">{{ pending_todos_count }}</div>
+        <div class="stat-unit">görev</div>
     </div>
 </div>
 

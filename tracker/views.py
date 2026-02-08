@@ -9,8 +9,40 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.db.models import Sum, Q
 from django.core.paginator import Paginator
+from datetime import timedelta
 from .models import StudySession, TodoItem
 from .forms import StudySessionForm, TodoForm
+
+
+def calculate_streak(user):
+    """
+    Kullanıcının streak sayısını hesaplar.
+    Üst üste en az 1 saat (60 dakika) çalışılan gün sayısını döndürür.
+    """
+    today = timezone.now().date()
+    streak = 0
+    current_date = today
+    
+    while True:
+        # Bu günün toplam çalışma süresini hesapla
+        day_sessions = StudySession.objects.filter(
+            user=user,
+            date=current_date
+        )
+        day_total_duration = day_sessions.aggregate(
+            total=Sum('duration')
+        )['total'] or 0
+        
+        # Eğer bu gün en az 1 saat (60 dakika) çalışılmışsa streak'e ekle
+        if day_total_duration >= 60:
+            streak += 1
+            # Bir önceki güne geç
+            current_date = current_date - timedelta(days=1)
+        else:
+            # Streak kırıldı, döngüden çık
+            break
+    
+    return streak
 
 def login_view(request):
     """
@@ -19,10 +51,6 @@ def login_view(request):
     GET isteğinde giriş ve kayıt formlarını gösterir.
     POST isteğinde kullanıcı girişi veya kayıt işlemini yapar.
     """
-    # Eğer kullanıcı zaten giriş yapmışsa ana sayfaya yönlendir
-    if request.user.is_authenticated:
-        return redirect('tracker:index')
-    
     login_form = None
     signup_form = None
     is_signup = False
@@ -91,13 +119,18 @@ def index(request):
         total=Sum('duration')
     )['total'] or 0
     
+    # Tamamlanmamış görev sayısı
+    pending_todos_count = TodoItem.objects.filter(
+        user=user,
+        completed=False
+    ).count()
+    
     # Bugünkü çalışma süresini saat ve dakika formatına çevir
     today_hours = today_total_duration // 60
     today_minutes = today_total_duration % 60
     
-    # Streak bilgisi (şimdilik 0 olarak gösterilecek)
-    # İleride ardışık günlerde çalışma yapılıp yapılmadığını kontrol edebiliriz
-    streak = 0
+    # Streak bilgisi hesapla
+    streak = calculate_streak(user)
     
     # Bugün çalıştıkların listesi (sadece bugünün kayıtları)
     recent_sessions = StudySession.objects.filter(
@@ -113,6 +146,7 @@ def index(request):
         'today_minutes': today_minutes,
         'streak': streak,
         'recent_sessions': recent_sessions,
+        'pending_todos_count': pending_todos_count,
     }
     
     return render(request, 'tracker/index.html', context)
@@ -180,9 +214,8 @@ def study_tracking(request):
     today_hours = today_total_duration // 60
     today_minutes = today_total_duration % 60
     
-    # Streak bilgisi (şimdilik 0 olarak gösterilecek)
-    # İleride ardışık günlerde çalışma yapılıp yapılmadığını kontrol edebiliriz
-    streak = 0
+    # Streak bilgisi hesapla (her zaman bugünün streak'i gösterilecek)
+    streak = calculate_streak(user)
     
     # Yeni kayıt ekleme formu
     form = None
@@ -391,7 +424,7 @@ def todo_list(request):
     # İstatistikler (tüm görevler için)
     total_todos = all_todos.count()
     completed_todos = all_todos.filter(completed=True).count()
-    pending_todos = total_todos - completed_todos
+    pending_todos = all_todos.filter(completed=False).count()  # Tamamlanmamış görevler
     
     context = {
         'todos': todos,
@@ -463,12 +496,30 @@ def edit_session(request, session_id):
     # Kaydı getir (sadece kullanıcının kendi kaydı)
     session = get_object_or_404(StudySession, id=session_id, user=user)
     
+    # URL'den veya referrer'dan tarih parametresini al
+    return_date = request.GET.get('date', None)
+    if not return_date:
+        # Referrer'dan tarih parametresini al
+        referrer = request.META.get('HTTP_REFERER', '')
+        if 'date=' in referrer:
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(referrer)
+            params = parse_qs(parsed.query)
+            if 'date' in params:
+                return_date = params['date'][0]
+    
+    # Eğer hala tarih yoksa, kaydın tarihini kullan
+    if not return_date:
+        return_date = session.date.strftime('%Y-%m-%d')
+    
     if request.method == 'POST':
         form = StudySessionForm(request.POST, instance=session)
         if form.is_valid():
             form.save()
             messages.success(request, 'Çalışma kaydı başarıyla güncellendi!')
-            return redirect('tracker:study_tracking')
+            # Kaydedilen kaydın tarihine yönlendir (veya return_date'e)
+            redirect_date = form.cleaned_data['date'].strftime('%Y-%m-%d')
+            return redirect(f"{reverse('tracker:study_tracking')}?date={redirect_date}")
         else:
             messages.error(request, 'Lütfen formu doğru şekilde doldurun.')
     else:
@@ -477,6 +528,7 @@ def edit_session(request, session_id):
     context = {
         'form': form,
         'session': session,
+        'return_date': return_date,
     }
     
     return render(request, 'tracker/edit_session.html', context)
@@ -494,18 +546,52 @@ def delete_session(request, session_id):
     # Kaydı getir (sadece kullanıcının kendi kaydı)
     session = get_object_or_404(StudySession, id=session_id, user=user)
     
+    # URL'den veya referrer'dan tarih parametresini al
+    return_date = request.GET.get('date', None)
+    if not return_date:
+        # Referrer'dan tarih parametresini al
+        referrer = request.META.get('HTTP_REFERER', '')
+        if 'date=' in referrer:
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(referrer)
+            params = parse_qs(parsed.query)
+            if 'date' in params:
+                return_date = params['date'][0]
+    
+    # Eğer hala tarih yoksa, kaydın tarihini kullan
+    if not return_date:
+        return_date = session.date.strftime('%Y-%m-%d')
+    
     if request.method == 'POST':
         # POST isteğinde kaydı sil
         # Silmeden önce kaydın tarihini al (redirect için)
         session_date = session.date
         session.delete()
         messages.success(request, 'Çalışma kaydı başarıyla silindi!')
-        # Silinen kaydın tarihine yönlendir
-        return redirect(f"{reverse('tracker:study_tracking')}?date={session_date.strftime('%Y-%m-%d')}")
+        # Silinen kaydın tarihine yönlendir (veya return_date'e)
+        redirect_date = return_date or session_date.strftime('%Y-%m-%d')
+        return redirect(f"{reverse('tracker:study_tracking')}?date={redirect_date}")
     
     # GET isteğinde silme onay sayfasını göster
     context = {
         'session': session,
+        'return_date': return_date,
     }
     
     return render(request, 'tracker/delete_session.html', context)
+
+
+@login_required
+def statistics(request):
+    """
+    İstatistikler sayfası view'ı.
+    
+    Kullanıcının çalışma istatistiklerini gösterir.
+    """
+    user = request.user
+    
+    context = {
+        'user': user,
+    }
+    
+    return render(request, 'tracker/statistics.html', context)

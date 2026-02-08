@@ -91,9 +91,10 @@
     
     <form method="post" style="display: inline;">
         {% csrf_token %}
+        {% if return_date %}<input type="hidden" name="date" value="{{ return_date }}">{% endif %}
         <button type="submit" class="btn-danger">Evet, Sil</button>
     </form>
-    <a href="{% url 'tracker:study_tracking' %}" class="btn-secondary">İptal</a>
+    <a href="{% url 'tracker:study_tracking' %}{% if return_date %}?date={{ return_date }}{% endif %}" class="btn-secondary">İptal</a>
 </div>
 {% endblock %}
 

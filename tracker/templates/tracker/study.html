@@ -65,13 +65,20 @@
         letter-spacing: 2px;
     }
     
+    /* Geri sayım gösterimi için margin */
+    #countdownDisplay {
+        margin-bottom: 30px;
+        margin-top: 0;
+    }
+    
     /* Geri sayım için input */
     .countdown-input-container {
-        margin-bottom: 40px;
+        margin-bottom: 30px;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: center;
         align-items: center;
-        gap: 15px;
+        gap: 20px;
     }
     
     .countdown-input-wrapper {
@@ -81,12 +88,12 @@
     }
     
     .countdown-input {
-        font-size: 56px;
-        padding: 20px 30px;
+        font-size: 36px;
+        padding: 12px 18px;
         border: 3px solid #e0e0e0;
         border-radius: 12px;
         text-align: center;
-        width: 180px;
+        width: 115px;
         font-weight: 400;
         color: #333;
         transition: all 0.3s ease;
@@ -107,7 +114,7 @@
     }
     
     .countdown-label {
-        font-size: 20px;
+        font-size: 18px;
         color: #666;
         font-weight: 500;
         letter-spacing: 0.5px;
@@ -181,7 +188,7 @@
     
     /* Çalışmalarıma ekle butonu */
     .btn-add-to-sessions {
-        background: linear-gradient(135deg, #2c5aa0 0%, #1e3d72 100%);
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         color: white;
         padding: 15px 35px;
         border: none;
@@ -196,8 +203,8 @@
     
     .btn-add-to-sessions:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(44, 90, 160, 0.4);
-        background: linear-gradient(135deg, #3a6bb8 0%, #2a4f8a 100%);
+        box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+        background: linear-gradient(135deg, #5fb8ff 0%, #1affff 100%);
     }
     
     .btn-add-to-sessions:disabled {
@@ -354,20 +361,44 @@
                 <div class="countdown-input-wrapper">
                     <input type="number" 
                            class="countdown-input" 
+                           id="hoursInput" 
+                           min="0" 
+                           max="23" 
+                           value="0" 
+                           placeholder="0">
+                    <span class="countdown-label">Saat</span>
+                </div>
+                <div class="countdown-input-wrapper">
+                    <input type="number" 
+                           class="countdown-input" 
                            id="minutesInput" 
-                           min="1" 
-                           max="999" 
+                           min="0" 
+                           max="59" 
                            value="25" 
                            placeholder="0">
                     <span class="countdown-label">Dakika</span>
                 </div>
             </div>
-            <div class="timer-display" id="countdownDisplay">25:00</div>
+            <div class="timer-display" id="countdownDisplay">25 dakika</div>
             <div class="timer-controls">
                 <button class="control-btn btn-start" id="countdownStartBtn" onclick="startCountdown()">Başlat</button>
-                <button class="control-btn btn-pause" id="countdownPauseBtn" onclick="pauseCountdown()" disabled>Durdur</button>
-                <button class="control-btn btn-reset" id="countdownResetBtn" onclick="resetCountdown()">Sıfırla</button>
+                <button class="control-btn btn-pause btn-disabled" id="countdownPauseBtn" onclick="pauseCountdown()">Durdur</button>
+                <button class="control-btn btn-reset btn-disabled" id="countdownResetBtn" onclick="resetCountdown()">Sıfırla</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal - Geri Sayım Tamamlandı -->
+<div id="countdownCompleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Tebrikler! 🎉</h3>
+            <span class="close" onclick="closeCountdownCompleteModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <p id="countdownCompleteMessage" style="font-size: 16px; color: #555; margin-bottom: 25px; text-align: center; line-height: 1.6;"></p>
+            <button type="button" class="btn-primary" onclick="openAddSessionFromCountdown()">Çalışmalarıma Ekle</button>
         </div>
     </div>
 </div>
@@ -447,12 +478,17 @@
     let stopwatchInterval = null;
     let stopwatchSeconds = 0;
     let stopwatchRunning = false;
+    let stopwatchStartTime = 0; // Timer başladığında kaydedilen zaman
+    let stopwatchPausedTime = 0; // Duraklatıldığında toplam geçen süre
     
     // Geri sayım değişkenleri
     let countdownInterval = null;
     let countdownSeconds = 0;
     let countdownRunning = false;
+    let originalHours = 0;
     let originalMinutes = 25;
+    let countdownEndTime = 0; // Geri sayımın biteceği zaman
+    let completedCountdownMinutes = 0; // Tamamlanan geri sayım dakikası (toplam dakika olarak)
     
     // Mod değiştirme fonksiyonu
     function switchMode(mode) {
@@ -498,7 +534,14 @@
             return;
         }
         stopwatchRunning = true;
-        stopwatchInterval = setInterval(updateStopwatch, 1000);
+        // Başlangıç zamanını kaydet (duraklatılmış süreyi de hesaba kat)
+        // Her başlatmada yeni bir başlangıç zamanı kaydedilir
+        stopwatchStartTime = Date.now() - (stopwatchPausedTime * 1000);
+        // localStorage'a kaydet
+        localStorage.setItem('stopwatchRunning', 'true');
+        localStorage.setItem('stopwatchStartTime', stopwatchStartTime.toString());
+        localStorage.setItem('stopwatchPausedTime', '0');
+        stopwatchInterval = setInterval(updateStopwatch, 100);
         canStart = false;
         canPause = true;
         canReset = true;
@@ -512,6 +555,11 @@
         }
         stopwatchRunning = false;
         clearInterval(stopwatchInterval);
+        // Duraklatıldığında toplam geçen süreyi kaydet
+        stopwatchPausedTime = stopwatchSeconds;
+        // localStorage'a kaydet
+        localStorage.setItem('stopwatchRunning', 'false');
+        localStorage.setItem('stopwatchPausedTime', stopwatchPausedTime.toString());
         canStart = true;
         canPause = false;
         updateButtonStates();
@@ -524,6 +572,12 @@
         }
         pauseStopwatch();
         stopwatchSeconds = 0;
+        stopwatchPausedTime = 0;
+        stopwatchStartTime = 0;
+        // localStorage'ı temizle
+        localStorage.removeItem('stopwatchRunning');
+        localStorage.removeItem('stopwatchStartTime');
+        localStorage.removeItem('stopwatchPausedTime');
         updateStopwatchDisplay();
         canStart = true;
         canPause = false;
@@ -558,7 +612,11 @@
     }
     
     function updateStopwatch() {
-        stopwatchSeconds++;
+        // Her zaman başlangıç zamanına göre hesapla (Date objesi kullanarak)
+        // Bu sayede sayfa değiştiğinde veya başka bir şey olduğunda doğru çalışır
+        const currentTime = Date.now();
+        const elapsed = Math.floor((currentTime - stopwatchStartTime) / 1000);
+        stopwatchSeconds = elapsed;
         updateStopwatchDisplay();
         
         // 1 dakika (60 saniye) geçtikten sonra "Çalışmalarıma Ekle" butonunu aktif et
@@ -585,95 +643,302 @@
     }
     
     // Geri sayım fonksiyonları
+    // Geri sayım buton durumlarını takip eden değişkenler
+    let canStartCountdown = true;
+    let canPauseCountdown = false;
+    let canResetCountdown = false;
+    
     function startCountdown() {
-        if (!countdownRunning) {
+        if (!countdownRunning && canStartCountdown) {
+            const hoursInput = document.getElementById('hoursInput');
             const minutesInput = document.getElementById('minutesInput');
+            const hours = parseInt(hoursInput.value) || 0;
             const minutes = parseInt(minutesInput.value) || 0;
             
-            if (minutes <= 0) {
-                alert('Lütfen geçerli bir dakika değeri girin (1-999)');
+            if (hours === 0 && minutes === 0) {
+                alert('Lütfen geçerli bir süre girin (en az 1 dakika)');
                 return;
             }
             
-            // İlk başlatmada dakika değerini kaydet
+            // İlk başlatmada saat ve dakika değerlerini kaydet
             if (countdownSeconds === 0) {
+                originalHours = hours;
                 originalMinutes = minutes;
-                countdownSeconds = minutes * 60;
+                // Toplam dakikayı hesapla (popup için)
+                completedCountdownMinutes = (hours * 60) + minutes;
+                // Toplam saniyeyi hesapla
+                countdownSeconds = (hours * 3600) + (minutes * 60);
             }
             
+            // Her başlatmada yeni bir bitiş zamanı hesapla (kalan süreye göre)
+            // Bu sayede sayfa değiştiğinde veya başka bir şey olduğunda doğru çalışır
+            countdownEndTime = Date.now() + (countdownSeconds * 1000);
+            
+            // localStorage'a kaydet
+            localStorage.setItem('countdownRunning', 'true');
+            localStorage.setItem('countdownEndTime', countdownEndTime.toString());
+            localStorage.setItem('countdownOriginalHours', originalHours.toString());
+            localStorage.setItem('countdownOriginalMinutes', originalMinutes.toString());
+            
             countdownRunning = true;
-            countdownInterval = setInterval(updateCountdown, 1000);
-            document.getElementById('countdownStartBtn').disabled = true;
-            document.getElementById('countdownPauseBtn').disabled = false;
+            countdownInterval = setInterval(updateCountdown, 100);
+            canStartCountdown = false;
+            canPauseCountdown = true;
+            canResetCountdown = true;
+            updateCountdownButtonStates();
+            hoursInput.disabled = true;
             minutesInput.disabled = true;
         }
     }
     
     function pauseCountdown() {
-        if (countdownRunning) {
+        if (countdownRunning && canPauseCountdown) {
             countdownRunning = false;
             clearInterval(countdownInterval);
-            document.getElementById('countdownStartBtn').disabled = false;
-            document.getElementById('countdownPauseBtn').disabled = true;
+            // Duraklatıldığında kalan süreyi hesapla ve kaydet
+            // Bu sayede tekrar başlatıldığında doğru süreyle devam eder
+            const remaining = Math.max(0, Math.floor((countdownEndTime - Date.now()) / 1000));
+            countdownSeconds = remaining;
+            // localStorage'a kaydet
+            localStorage.setItem('countdownRunning', 'false');
+            localStorage.setItem('countdownRemainingSeconds', countdownSeconds.toString());
+            canStartCountdown = true;
+            canPauseCountdown = false;
+            updateCountdownButtonStates();
+            // Input'lar disabled kalır, sadece sıfırla tuşuna basıldığında tekrar aktif olur
         }
     }
     
     function resetCountdown() {
+        if (!canResetCountdown || countdownSeconds === 0) {
+            return;
+        }
         pauseCountdown();
+        const hoursInput = document.getElementById('hoursInput');
         const minutesInput = document.getElementById('minutesInput');
         countdownSeconds = 0;
+        countdownEndTime = 0;
+        originalHours = parseInt(hoursInput.value) || 0;
         originalMinutes = parseInt(minutesInput.value) || 25;
-        countdownSeconds = originalMinutes * 60;
+        countdownSeconds = (originalHours * 3600) + (originalMinutes * 60);
+        // localStorage'ı temizle
+        localStorage.removeItem('countdownRunning');
+        localStorage.removeItem('countdownEndTime');
+        localStorage.removeItem('countdownRemainingSeconds');
+        localStorage.removeItem('countdownOriginalHours');
+        localStorage.removeItem('countdownOriginalMinutes');
         updateCountdownDisplay();
-        document.getElementById('countdownStartBtn').disabled = false;
-        document.getElementById('countdownPauseBtn').disabled = true;
+        canStartCountdown = true;
+        canPauseCountdown = false;
+        canResetCountdown = false;
+        updateCountdownButtonStates();
+        hoursInput.disabled = false;
         minutesInput.disabled = false;
     }
     
-    function updateCountdown() {
-        if (countdownSeconds > 0) {
-            countdownSeconds--;
-            updateCountdownDisplay();
+    // Geri sayım buton görsel durumlarını güncelle
+    function updateCountdownButtonStates() {
+        const startBtn = document.getElementById('countdownStartBtn');
+        const pauseBtn = document.getElementById('countdownPauseBtn');
+        const resetBtn = document.getElementById('countdownResetBtn');
+        
+        if (canStartCountdown) {
+            startBtn.classList.remove('btn-disabled');
         } else {
+            startBtn.classList.add('btn-disabled');
+        }
+        
+        if (canPauseCountdown) {
+            pauseBtn.classList.remove('btn-disabled');
+        } else {
+            pauseBtn.classList.add('btn-disabled');
+        }
+        
+        if (canResetCountdown) {
+            resetBtn.classList.remove('btn-disabled');
+        } else {
+            resetBtn.classList.add('btn-disabled');
+        }
+    }
+    
+    function updateCountdown() {
+        // Her zaman bitiş zamanına göre hesapla (Date objesi kullanarak)
+        // Bu sayede sayfa değiştiğinde veya başka bir şey olduğunda doğru çalışır
+        const currentTime = Date.now();
+        const remaining = Math.max(0, Math.floor((countdownEndTime - currentTime) / 1000));
+        countdownSeconds = remaining;
+        updateCountdownDisplay();
+        
+        // Süre 0'dan büyükse Sıfırla butonunu aktif et
+        if (countdownSeconds > 0) {
+            canResetCountdown = true;
+            updateCountdownButtonStates();
+        }
+        
+        if (countdownSeconds <= 0) {
             // Geri sayım bitti
             pauseCountdown();
-            alert('Süre doldu! 🎉');
+            // Tamamlanan dakika sayısını kaydet (resetCountdown'dan önce)
+            completedCountdownMinutes = (originalHours * 60) + originalMinutes;
+            // localStorage'ı temizle
+            localStorage.removeItem('countdownRunning');
+            localStorage.removeItem('countdownEndTime');
+            localStorage.removeItem('countdownRemainingSeconds');
+            localStorage.removeItem('countdownOriginalHours');
+            localStorage.removeItem('countdownOriginalMinutes');
+            // Popup'ı göster
+            showCountdownCompleteModal();
+            // Geri sayımı sıfırla (resetCountdown originalHours ve originalMinutes'ı input'tan tekrar alacak)
             resetCountdown();
         }
     }
     
     function updateCountdownDisplay() {
-        const minutes = Math.floor(countdownSeconds / 60);
+        const totalMinutes = Math.floor(countdownSeconds / 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
         const seconds = countdownSeconds % 60;
         
-        const display = String(minutes).padStart(2, '0') + ':' + 
-                       String(seconds).padStart(2, '0');
+        // Saat:dakika:saniye formatında göster (ör: 1:30:45, 0:25:30, 2:05:00)
+        const display = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
         document.getElementById('countdownDisplay').textContent = display;
     }
     
     // Sayfa yüklendiğinde geri sayımı başlat ve buton durumlarını ayarla
     window.addEventListener('DOMContentLoaded', function() {
-        const minutesInput = document.getElementById('minutesInput');
-        originalMinutes = parseInt(minutesInput.value) || 25;
-        countdownSeconds = originalMinutes * 60;
-        updateCountdownDisplay();
+        // Süre tutucu durumunu localStorage'dan geri yükle
+        const savedRunning = localStorage.getItem('stopwatchRunning');
+        const savedStartTime = localStorage.getItem('stopwatchStartTime');
+        const savedPausedTime = localStorage.getItem('stopwatchPausedTime');
         
-        // Başlangıç buton durumlarını ayarla
-        canStart = true;
-        canPause = false;
-        canReset = false;
-        updateButtonStates();
+        if (savedRunning === 'true' && savedStartTime) {
+            // Süre tutucu çalışıyordu, devam ettir
+            stopwatchRunning = true;
+            stopwatchStartTime = parseInt(savedStartTime);
+            stopwatchPausedTime = parseInt(savedPausedTime) || 0;
+            // Geçen süreyi hesapla
+            const elapsed = Math.floor((Date.now() - stopwatchStartTime) / 1000);
+            stopwatchSeconds = elapsed;
+            updateStopwatchDisplay();
+            // Timer'ı başlat
+            stopwatchInterval = setInterval(updateStopwatch, 100);
+            canStart = false;
+            canPause = true;
+            canReset = true;
+            // 1 dakika geçtiyse "Çalışmalarıma Ekle" butonunu aktif et
+            if (stopwatchSeconds >= 60) {
+                document.getElementById('addToSessionsBtn').disabled = false;
+            }
+            updateButtonStates();
+        } else if (savedPausedTime) {
+            // Süre tutucu duraklatılmıştı
+            stopwatchPausedTime = parseInt(savedPausedTime) || 0;
+            stopwatchSeconds = stopwatchPausedTime;
+            updateStopwatchDisplay();
+            canStart = true;
+            canPause = false;
+            canReset = stopwatchPausedTime > 0;
+            // 1 dakika geçtiyse "Çalışmalarıma Ekle" butonunu aktif et
+            if (stopwatchSeconds >= 60) {
+                document.getElementById('addToSessionsBtn').disabled = false;
+            }
+            updateButtonStates();
+        } else {
+            // Başlangıç buton durumlarını ayarla (süre tutucu)
+            canStart = true;
+            canPause = false;
+            canReset = false;
+            updateButtonStates();
+        }
+        
+        // Geri sayım durumunu localStorage'dan geri yükle
+        const savedCountdownRunning = localStorage.getItem('countdownRunning');
+        const savedCountdownEndTime = localStorage.getItem('countdownEndTime');
+        const savedCountdownRemaining = localStorage.getItem('countdownRemainingSeconds');
+        const savedOriginalHours = localStorage.getItem('countdownOriginalHours');
+        const savedOriginalMinutes = localStorage.getItem('countdownOriginalMinutes');
+        
+        const hoursInput = document.getElementById('hoursInput');
+        const minutesInput = document.getElementById('minutesInput');
+        
+        if (savedCountdownRunning === 'true' && savedCountdownEndTime) {
+            // Geri sayım çalışıyordu, devam ettir
+            countdownEndTime = parseInt(savedCountdownEndTime);
+            originalHours = parseInt(savedOriginalHours) || 0;
+            originalMinutes = parseInt(savedOriginalMinutes) || 25;
+            completedCountdownMinutes = (originalHours * 60) + originalMinutes;
+            
+            // Kalan süreyi hesapla
+            const remaining = Math.max(0, Math.floor((countdownEndTime - Date.now()) / 1000));
+            countdownSeconds = remaining;
+            
+            if (countdownSeconds <= 0) {
+                // Süre dolmuş, popup göster ve sıfırla
+                completedCountdownMinutes = (originalHours * 60) + originalMinutes;
+                showCountdownCompleteModal();
+                countdownSeconds = 0;
+                countdownEndTime = 0;
+                localStorage.removeItem('countdownRunning');
+                localStorage.removeItem('countdownEndTime');
+                localStorage.removeItem('countdownRemainingSeconds');
+                localStorage.removeItem('countdownOriginalHours');
+                localStorage.removeItem('countdownOriginalMinutes');
+                canStartCountdown = true;
+                canPauseCountdown = false;
+                canResetCountdown = false;
+                hoursInput.disabled = false;
+                minutesInput.disabled = false;
+            } else {
+                // Timer'ı devam ettir
+                countdownRunning = true;
+                countdownInterval = setInterval(updateCountdown, 100);
+                canStartCountdown = false;
+                canPauseCountdown = true;
+                canResetCountdown = true;
+                hoursInput.disabled = true;
+                minutesInput.disabled = true;
+            }
+            updateCountdownDisplay();
+            updateCountdownButtonStates();
+        } else if (savedCountdownRemaining) {
+            // Geri sayım duraklatılmıştı
+            countdownSeconds = parseInt(savedCountdownRemaining);
+            originalHours = parseInt(savedOriginalHours) || 0;
+            originalMinutes = parseInt(savedOriginalMinutes) || 25;
+            completedCountdownMinutes = (originalHours * 60) + originalMinutes;
+            updateCountdownDisplay();
+            canStartCountdown = true;
+            canPauseCountdown = false;
+            canResetCountdown = countdownSeconds > 0;
+            hoursInput.disabled = false;
+            minutesInput.disabled = false;
+            updateCountdownButtonStates();
+        } else {
+            // Başlangıç durumu
+            originalHours = parseInt(hoursInput.value) || 0;
+            originalMinutes = parseInt(minutesInput.value) || 25;
+            countdownSeconds = (originalHours * 3600) + (originalMinutes * 60);
+            updateCountdownDisplay();
+            // Başlangıç buton durumlarını ayarla (geri sayım)
+            canStartCountdown = true;
+            canPauseCountdown = false;
+            canResetCountdown = false;
+            updateCountdownButtonStates();
+        }
         
         // Input değeri değiştiğinde timer'ı güncelle (geri sayım çalışmıyorsa)
-        minutesInput.addEventListener('input', function() {
+        function updateCountdownFromInputs() {
             if (!countdownRunning) {
-                const minutes = parseInt(this.value) || 0;
-                if (minutes > 0 && minutes <= 999) {
-                    countdownSeconds = minutes * 60;
-                    updateCountdownDisplay();
-                }
+                const hours = parseInt(hoursInput.value) || 0;
+                const minutes = parseInt(minutesInput.value) || 0;
+                countdownSeconds = (hours * 3600) + (minutes * 60);
+                updateCountdownDisplay();
             }
-        });
+        }
+        
+        hoursInput.addEventListener('input', updateCountdownFromInputs);
+        minutesInput.addEventListener('input', updateCountdownFromInputs);
     });
     
     // Çalışma kaydı ekleme modal fonksiyonları
@@ -711,6 +976,90 @@
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             closeAddSessionModal();
+            closeCountdownCompleteModal();
+        }
+    });
+    
+    // Geri sayım tamamlandı popup fonksiyonları
+    function showCountdownCompleteModal() {
+        const modal = document.getElementById('countdownCompleteModal');
+        const message = document.getElementById('countdownCompleteMessage');
+        
+        // Saat ve dakika formatında mesaj oluştur
+        const hours = Math.floor(completedCountdownMinutes / 60);
+        const minutes = completedCountdownMinutes % 60;
+        let timeText = '';
+        if (hours > 0 && minutes > 0) {
+            timeText = `${hours} saat ${minutes} dakika`;
+        } else if (hours > 0) {
+            timeText = `${hours} saat`;
+        } else {
+            timeText = `${minutes} dakika`;
+        }
+        
+        message.textContent = `Tebrikler ${timeText} çalıştın! Bu süreyi çalışmalarına eklemek ister misin?`;
+        modal.style.display = 'block';
+    }
+    
+    function closeCountdownCompleteModal() {
+        document.getElementById('countdownCompleteModal').style.display = 'none';
+    }
+    
+    function openAddSessionFromCountdown() {
+        // Geri sayım tamamlandı popup'ını kapat
+        closeCountdownCompleteModal();
+        
+        // Form alanlarını doldur
+        document.getElementById('id_duration').value = completedCountdownMinutes;
+        
+        // Bugünün tarihini ayarla
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        document.getElementById('id_date').value = `${year}-${month}-${day}`;
+        
+        // Çalışma kaydı ekleme modal'ını aç
+        document.getElementById('addSessionModal').style.display = 'block';
+    }
+    
+    // Modal dışına tıklanınca kapat (geri sayım tamamlandı popup için)
+    window.addEventListener('click', function(event) {
+        const addModal = document.getElementById('addSessionModal');
+        const countdownCompleteModal = document.getElementById('countdownCompleteModal');
+        
+        if (event.target == addModal) {
+            closeAddSessionModal();
+        }
+        
+        if (event.target == countdownCompleteModal) {
+            closeCountdownCompleteModal();
+        }
+    });
+    
+    // Sayfa görünür olduğunda timer'ları güncelle
+    // Bu sayede sayfa değiştiğinde veya başka bir şey olduğunda timer'lar doğru çalışır
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // Sayfa görünür olduğunda timer'ları güncelle
+            if (stopwatchRunning) {
+                // Süre tutucu çalışıyorsa, başlangıç zamanına göre güncelle
+                updateStopwatch();
+            }
+            if (countdownRunning) {
+                // Geri sayım çalışıyorsa, bitiş zamanına göre güncelle
+                updateCountdown();
+            }
+        }
+    });
+    
+    // Sayfa odaklandığında da timer'ları güncelle
+    window.addEventListener('focus', function() {
+        if (stopwatchRunning) {
+            updateStopwatch();
+        }
+        if (countdownRunning) {
+            updateCountdown();
         }
     });
 </script>

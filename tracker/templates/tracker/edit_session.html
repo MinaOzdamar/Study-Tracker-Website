@@ -130,7 +130,7 @@
         
         <div>
             <button type="submit" class="btn-primary">Kaydet</button>
-            <a href="{% url 'tracker:study_tracking' %}" class="btn-secondary">İptal</a>
+            <a href="{% url 'tracker:study_tracking' %}{% if return_date %}?date={{ return_date }}{% endif %}" class="btn-secondary">İptal</a>
         </div>
     </form>
 </div>

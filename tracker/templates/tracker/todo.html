@@ -1,8 +1,8 @@
 {% extends 'tracker/dashboard_base.html' %}
 
-{% block title %}To do list - Studie{% endblock %}
+{% block title %}Yapılacaklar Listesi - Studie{% endblock %}
 
-{% block page_title %}To do list{% endblock %}
+{% block page_title %}Yapılacaklar Listesi{% endblock %}
 
 {% block content %}
 <style>
@@ -21,11 +21,11 @@
     }
     
     .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         color: white;
         padding: 12px 18px;
         border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
         text-align: center;
         min-width: 100px;
     }
@@ -309,6 +309,15 @@
         background-color: #45a049;
     }
     
+    .todo-item.completed .btn-toggle {
+        background-color: #0d7004;
+        color: white;
+    }
+    
+    .todo-item.completed .btn-toggle:hover {
+        background-color: #0a5a03;
+    }
+    
     .btn-delete {
         background-color: #f44336;
         color: white;
@@ -547,7 +556,7 @@
     <div class="todo-stats">
         <div class="stat-card">
             <div class="stat-label">Toplam Görev</div>
-            <div class="stat-value">{{ total_todos }}</div>
+            <div class="stat-value">{{ pending_todos }}</div>
         </div>
     </div>
     
@@ -655,7 +664,7 @@
                                             <input type="hidden" name="toggle_todo" value="1">
                                             <input type="hidden" name="todo_id" value="{{ todo.id }}">
                                             <button type="submit" class="btn-action btn-toggle">
-                                                {% if todo.completed %}Tamamlanmadı İşaretle{% else %}Tamamla{% endif %}
+                                                {% if todo.completed %}Tamamlanmadı{% else %}Tamamla{% endif %}
                                             </button>
                                         </form>
                                         <form method="post" style="display: inline;" onsubmit="return confirm('Bu görevi silmek istediğinizden emin misiniz?');">
