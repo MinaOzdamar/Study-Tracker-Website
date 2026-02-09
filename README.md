@@ -30,7 +30,7 @@ Django ve PostgreSQL kullanılarak geliştirilen, kullanıcıya özel çalışma
 Teknolojiler
 
 Backend:
-- Python 3.x
+- Python 3.13.3
 - Django 5.2.8
 - PostgreSQL
 - Django ORM
