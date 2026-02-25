@@ -20,5 +20,9 @@ urlpatterns = [
     path('todo/', views.todo_list, name='todo_list'),  # Yapılacaklar listesi sayfası
     path('todo/edit/<int:todo_id>/', views.edit_todo, name='edit_todo'),  # Görev düzenleme
     path('statistics/', views.statistics, name='statistics'),  # İstatistikler sayfası
+    path('calendar/', views.calendar_view, name='calendar'),  # Takvim sayfası
+    path('calendar/add-event/', views.calendar_add_event, name='calendar_add_event'),
+    path('calendar/edit-event/<int:event_id>/', views.calendar_edit_event, name='calendar_edit_event'),
+    path('calendar/delete-event/<int:event_id>/', views.calendar_delete_event, name='calendar_delete_event'),
 ]
 

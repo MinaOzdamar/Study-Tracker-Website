@@ -228,6 +228,9 @@
             <a href="{% url 'tracker:study_tracking' %}" class="menu-item {% if request.resolver_match.url_name == 'study_tracking' %}active{% endif %}">
                 Çalışma Takibi
             </a>
+            <a href="{% url 'tracker:calendar' %}" class="menu-item {% if request.resolver_match.url_name == 'calendar' %}active{% endif %}">
+                Takvim
+            </a>
             <a href="{% url 'tracker:study' %}" class="menu-item {% if request.resolver_match.url_name == 'study' %}active{% endif %}">
                 Ders Çalış
             </a>

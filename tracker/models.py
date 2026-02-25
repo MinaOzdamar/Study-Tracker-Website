@@ -169,3 +169,43 @@ class TodoItem(models.Model):
         """
         status = "✓" if self.completed else "○"
         return f"{status} {self.title}"
+
+
+class CalendarEvent(models.Model):
+    """
+    Takvim etkinliği modeli.
+    Kullanıcının bir güne eklediği başlık/iş (küçük etiket).
+    """
+    COLOR_CHOICES = [
+        ('#667eea', 'Mor'),
+        ('#f5576c', 'Pembe'),
+        ('#4ecdc4', 'Turkuaz'),
+        ('#45b7d1', 'Mavi'),
+        ('#96ceb4', 'Yeşil'),
+        ('#ffeaa7', 'Sarı'),
+        ('#f8b4c4', 'Açık Pembe'),
+    ]
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Kullanıcı',
+        related_name='calendar_events'
+    )
+    date = models.DateField(verbose_name='Tarih')
+    title = models.CharField(max_length=100, verbose_name='Başlık')
+    color = models.CharField(
+        max_length=7,
+        choices=COLOR_CHOICES,
+        default='#667eea',
+        verbose_name='Renk'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Takvim Etkinliği'
+        verbose_name_plural = 'Takvim Etkinlikleri'
+        ordering = ['date', 'created_at']
+
+    def __str__(self):
+        return f"{self.title} - {self.date}"

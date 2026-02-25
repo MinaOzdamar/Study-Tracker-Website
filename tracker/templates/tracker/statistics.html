@@ -29,28 +29,42 @@
     }
     
     .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
         margin-top: 20px;
     }
     
+    .stats-grid.wide {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+    
     .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 25px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        background: transparent;
+        color: #1f2933;
+        padding: 15px 0;
+        border: none;
+        box-shadow: none;
+        position: relative;
+        border-bottom: 1px solid #e5e7eb;
     }
     
-    .stat-card.secondary {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+    .stat-card:last-child {
+        border-bottom: none;
     }
     
-    .stat-card.blue {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+    .stat-card::before {
+        display: none;
+    }
+    
+    .stat-card.secondary::before {
+        display: none;
+    }
+    
+    .stat-card.blue::before {
+        display: none;
     }
     
     .stat-label {
@@ -72,23 +86,449 @@
         font-weight: 400;
     }
     
-    .placeholder-text {
+    .stat-description {
+        font-size: 13px;
+        opacity: 0.9;
+        margin-top: 8px;
+    }
+    
+    .section-subtitle {
+        font-size: 14px;
+        color: #666;
+        margin-top: -10px;
+        margin-bottom: 15px;
+    }
+    
+    .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 14px;
+    }
+    
+    .stats-table th,
+    .stats-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #f0f0f0;
+        text-align: left;
+    }
+    
+    .stats-table th {
+        background-color: #f9fafc;
+        font-weight: 600;
+        color: #555;
+    }
+    
+    .stats-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .stats-table small {
         color: #999;
-        font-style: italic;
+    }
+    
+    .range-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 0;
+    }
+    
+    .range-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .range-select {
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: 2px solid #667eea;
+        font-size: 14px;
+        font-weight: 500;
+        background-color: #fff;
+        color: #667eea;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        padding-right: 36px;
+    }
+    
+    .range-select:hover {
+        background-color: #f0f4ff;
+    }
+    
+    .range-select:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+    }
+    
+    .chart-container {
+        margin-top: 15px;
+        background-color: #f9fafc;
+        border-radius: 10px;
+        padding: 15px 18px 12px;
+        border: 1px solid #eef1ff;
+    }
+    
+    .chart-title {
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 12px;
+        font-weight: 500;
+    }
+    
+    .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        height: 180px;
+        padding: 10px 5px;
+        background-color: #fafbfc;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .bar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-width: 0;
+        height: 180px;
+    }
+    
+    .bar-value {
+        font-size: 12px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 4px;
+    }
+    
+    .bar-rect {
+        width: 100%;
+        max-width: 50px;
+        min-width: 30px;
+        min-height: 12px;
+        border-radius: 6px 6px 0 0;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        position: relative;
+        height: var(--bar-height, 3%);
+    }
+    
+    .bar-rect:hover {
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .bar-rect.muted {
+        background: linear-gradient(180deg, #e5e7eb, #d1d5db);
+        box-shadow: none;
+    }
+    
+    /* Son 7 Gün Çalışma: yeşil-turkuaz gradient, sütun yüksekliği dakikaya orantılı */
+    .bar-chart-study .bar-rect {
+        background: linear-gradient(180deg, #14b8a6 0%, #22c55e 100%);
+        box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+        min-height: 16px;
+    }
+    .bar-chart-study .bar-rect:hover {
+        box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+    }
+    .bar-chart-study .bar-rect.muted {
+        background: linear-gradient(180deg, #e5e7eb, #d1d5db);
+        min-height: 8px;
+    }
+    
+    .bar-label {
+        font-size: 11px;
+        color: #6b7280;
+        font-weight: 500;
         text-align: center;
-        padding: 40px;
+        white-space: nowrap;
+    }
+    
+    .progress-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 12px;
+    }
+    
+    .progress-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: #4b5563;
+    }
+    
+    .progress-bar {
+        flex: 1;
+        height: 8px;
+        border-radius: 999px;
+        background-color: #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #34d399, #22c55e);
+        width: var(--progress-width, 0%);
+    }
+    
+    .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        background-color: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #dbeafe;
+        margin-left: 6px;
+    }
+    
+    .achievements-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        margin-top: 14px;
+        align-items: flex-start;
+    }
+    
+    .achievement-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 120px;
+    }
+    
+    .achievement-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        box-sizing: border-box;
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .achievement-card:hover .achievement-circle {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+    
+    .achievement-circle.earned {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: 3px solid rgba(255, 255, 255, 0.4);
+    }
+    
+    .achievement-circle.locked {
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        color: #6b7280;
+        border: 3px solid #f3f4f6;
+    }
+    
+    .achievement-title {
+        font-weight: 600;
+        font-size: 12px;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+    
+    .achievement-earned {
+        color: #16a34a;
+        font-weight: 600;
+        font-size: 11px;
+    }
+    
+    .achievement-locked {
+        color: #9ca3af;
+        font-weight: 500;
+        font-size: 11px;
+    }
+    
+    .achievement-desc {
+        font-size: 10px;
+        color: #6b7280;
+        margin-top: 2px;
+        line-height: 1.3;
+    }
+    
+    .achievement-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 2px dashed #d1d5db;
+        background: #f9fafb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: #9ca3af;
+        text-align: center;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+    
+    .achievement-placeholder-text {
+        font-size: 11px;
+        color: #9ca3af;
+        margin-top: 8px;
+        font-style: italic;
+    }
+    
+    .summary-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="statistics-container">
+    <!-- Çalışma Süreleri ve Trendler (birleşik) -->
     <div class="statistics-section">
-        <h2 class="section-title">Genel İstatistikler</h2>
-        <div class="placeholder-text">
-            İstatistikler yakında eklenecek...
+        <div class="summary-header">
+            <h2 class="section-title" style="margin-bottom: 0;">Çalışma Süreleri ve Trendler</h2>
+            <form method="get" class="range-form">
+                <span class="range-label">Zaman aralığı:</span>
+                <select name="range" class="range-select" onchange="this.form.submit()">
+                    <option value="7" {% if range_param == '7' %}selected{% endif %}>Son 7 Gün</option>
+                    <option value="14" {% if range_param == '14' %}selected{% endif %}>Son 14 Gün</option>
+                    <option value="30" {% if range_param == '30' %}selected{% endif %}>Son 1 Ay</option>
+                    <option value="all" {% if range_param == 'all' %}selected{% endif %}>Şimdiye Kadar</option>
+                </select>
+            </form>
+        </div>
+        <div class="section-subtitle">
+            Seçtiğin zaman aralığı için çalışma özetin ve son günlerdeki çalışma trendin.
+        </div>
+        <div class="stats-grid wide">
+            <div class="stat-card secondary">
+                <div class="stat-label">Ortalama Çalışma (Tüm günler)</div>
+                <div class="stat-value">
+                    {{ genel_tum_gunler_hours }}s {{ genel_tum_gunler_remaining_minutes }}dk
+                </div>
+            </div>
+            <div class="stat-card secondary">
+                <div class="stat-label">Ortalama Çalışma (Çalışılan günlerde)</div>
+                <div class="stat-value">
+                    {{ genel_calisilan_hours }}s {{ genel_calisilan_minutes }}dk
+                </div>
+            </div>
+            <div class="stat-card blue">
+                <div class="stat-label">Toplam Süre</div>
+                <div class="stat-value">
+                    {{ range_hours }}s {{ range_remaining_minutes }}dk
+                </div>
+                <div class="stat-unit">Toplam {{ range_sessions_count }} oturum</div>
+            </div>
+        </div>
+        
+        <!-- Son 7 Gün Çalışma Çubuk Grafiği: dakikaya göre orantılı, en çok çalışılan gün üste değer -->
+        <div class="chart-container" style="margin-top: 24px;">
+            <div class="chart-title">Çalışma Süresi Grafiği</div>
+            <div class="bar-chart bar-chart-study">
+                {% for day in last_7_days_details %}
+                    <div class="bar">
+                        <div class="bar-value">
+                            {% if day.minutes > 0 %}{{ day.minutes }} dk{% else %}0{% endif %}
+                        </div>
+                        {% if day.percent > 0 %}
+                            <div class="bar-rect" style="--bar-height: {{ day.percent }}%;"></div>
+                        {% else %}
+                            <div class="bar-rect muted" style="--bar-height: 2%;"></div>
+                        {% endif %}
+                        <div class="bar-label">{{ day.date|date:"d.m" }}</div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
+    
+    <!-- Hedefler ve Başarılar -->
+    <div class="statistics-section">
+        <h2 class="section-title">Hedefler ve Başarılar</h2>
+        <div class="section-subtitle">
+            Haftalık ve aylık çalışma hedeflerin ile kazandığın başarı rozetleri.
+        </div>
+        
+        <!-- Hedef İlerlemesi -->
+        <div class="chart-container">
+            <div class="chart-title">Haftalık / Aylık Hedef İlerlemesi</div>
+            <div class="progress-row">
+                <div class="progress-item">
+                    <span>Haftalık Hedef ({{ weekly_goal_minutes }} dk)</span>
+                    <div class="progress-bar">
+                        {% if weekly_progress_percent %}
+                            <div class="progress-fill" style="--progress-width: {{ weekly_progress_percent }}%;"></div>
+                        {% else %}
+                            <div class="progress-fill" style="--progress-width: 0%;"></div>
+                        {% endif %}
+                    </div>
+                    <span style="font-size: 12px; color: #4b5563;">{{ weekly_progress_percent }}%</span>
+                </div>
+                <div class="progress-item">
+                    <span>Aylık Hedef ({{ monthly_goal_minutes }} dk)</span>
+                    <div class="progress-bar">
+                        {% if monthly_progress_percent %}
+                            <div class="progress-fill" style="--progress-width: {{ monthly_progress_percent }}%;"></div>
+                        {% else %}
+                            <div class="progress-fill" style="--progress-width: 0%;"></div>
+                        {% endif %}
+                    </div>
+                    <span style="font-size: 12px; color: #4b5563;">{{ monthly_progress_percent }}%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Başarı Rozetleri -->
+        <div class="chart-container">
+            <div class="chart-title">Başarı Rozetleri</div>
+            <div class="achievements-grid">
+                {% for badge in achievements %}
+                    <div class="achievement-card">
+                        <div class="achievement-circle {% if badge.earned %}earned{% else %}locked{% endif %}" title="{{ badge.description }}">
+                            {{ badge.title }}
+                        </div>
+                        <div class="achievement-title">{{ badge.title }}</div>
+                        {% if badge.earned %}
+                            <span class="achievement-earned">✓ Kazanıldı</span>
+                        {% else %}
+                            <span class="achievement-locked">Kilidi Açılmadı</span>
+                        {% endif %}
+                        <div class="achievement-desc">{{ badge.description }}</div>
+                    </div>
+                {% endfor %}
+                <div class="achievement-card">
+                    <div class="achievement-placeholder">+</div>
+                    <div class="achievement-placeholder-text">Yeni rozetler gelecek</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>
 {% endblock %}
 

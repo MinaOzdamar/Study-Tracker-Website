@@ -1,0 +1,472 @@
+{% extends 'tracker/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Takvim - Studie{% endblock %}
+{% block page_title %}Takvim{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-wrap {
+        max-width: 100%;
+    }
+    .calendar-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .calendar-nav h2 {
+        font-size: 22px;
+        color: #333;
+        margin: 0;
+        font-weight: 600;
+    }
+    .calendar-arrows {
+        display: flex;
+        gap: 8px;
+    }
+    .calendar-arrows a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #f0f4ff;
+        color: #667eea;
+        text-decoration: none;
+        font-size: 20px;
+        transition: background 0.2s, color 0.2s;
+    }
+    .calendar-arrows a:hover {
+        background: #667eea;
+        color: white;
+    }
+    .calendar-months {
+        max-width: 100%;
+    }
+    .month-card {
+        background: #fafbfc;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    .month-title {
+        text-align: center;
+        padding: 14px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #374151;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .month-grid {
+        padding: 12px;
+    }
+    .weekday-headers {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(100px, 1fr));
+        gap: 4px;
+        margin-bottom: 6px;
+    }
+    .weekday-head {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        padding: 8px 0;
+    }
+    .week-row {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(100px, 1fr));
+        gap: 4px;
+    }
+    .day-cell {
+        height: 110px;
+        min-height: 110px;
+        max-height: 110px;
+        padding: 6px;
+        border-radius: 8px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: background 0.2s, border-color 0.2s;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .day-cell:hover {
+        background: #f9fafb;
+        border-color: #667eea;
+    }
+    .day-cell.other-month {
+        background: #f9fafb;
+        opacity: 0.7;
+    }
+    .day-cell.today {
+        border-color: #667eea;
+        background: #f0f4ff;
+        font-weight: 700;
+    }
+    .day-number {
+        font-size: 13px;
+        color: #374151;
+        margin-bottom: 4px;
+        flex-shrink: 0;
+    }
+    .day-events {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        overflow: hidden;
+        flex: 1;
+        min-height: 0;
+    }
+    .day-event {
+        font-size: 11px;
+        padding: 3px 6px;
+        border-radius: 4px;
+        color: #111;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        border: none;
+        text-align: left;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .day-event:hover {
+        opacity: 0.9;
+    }
+    .day-cell.empty { cursor: default; background: transparent; border-color: transparent; }
+    .day-cell.empty:hover { background: transparent; border-color: transparent; }
+
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        width: 100%;
+        max-width: 380px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    }
+    .modal-box h3 { margin: 0 0 16px 0; font-size: 18px; color: #333; }
+    .modal-box label { display: block; font-size: 13px; color: #555; margin-bottom: 4px; }
+    .modal-box input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d0d7ff;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+    }
+    .modal-box .color-picks {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .modal-box .color-pick {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .modal-box .color-pick:hover { transform: scale(1.1); }
+    .modal-box .color-pick.selected { border-color: #333; }
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    .modal-actions button {
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        border: none;
+        font-weight: 500;
+    }
+    .modal-actions .btn-cancel {
+        background: #f3f4f6;
+        color: #555;
+    }
+    .modal-actions .btn-save {
+        background: #667eea;
+        color: white;
+    }
+    .modal-actions .btn-save:hover { background: #5a6fd6; }
+    .modal-actions .btn-cancel:hover { background: #e5e7eb; }
+    .modal-actions .btn-delete {
+        background: #dc3545;
+        color: white;
+        margin-right: auto;
+    }
+    .modal-actions .btn-delete:hover { background: #c82333; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calendar-wrap">
+    <div class="calendar-nav">
+        <h2>Takvim</h2>
+        <div class="calendar-arrows">
+            <a href="?offset={{ prev_offset }}" title="Önceki">‹</a>
+            <a href="?offset={{ next_offset }}" title="Sonraki">›</a>
+        </div>
+    </div>
+
+    <div class="calendar-months">
+        {% for month in months_data %}
+        <div class="month-card">
+            <div class="month-title">{{ month.month_name }} {{ month.year }}</div>
+            <div class="month-grid">
+                <div class="weekday-headers">
+                    <span class="weekday-head">Pzt</span>
+                    <span class="weekday-head">Sal</span>
+                    <span class="weekday-head">Çar</span>
+                    <span class="weekday-head">Per</span>
+                    <span class="weekday-head">Cum</span>
+                    <span class="weekday-head">Cmt</span>
+                    <span class="weekday-head">Paz</span>
+                </div>
+                {% for week in month.weeks %}
+                <div class="week-row">
+                    {% for d in week %}
+                    {% if d %}
+                    <div class="day-cell {% if d.date_iso == today %}today{% endif %}" 
+                         data-date="{{ d.date_iso }}"
+                         data-year="{{ month.year }}"
+                         data-month="{{ month.month }}">
+                        <div class="day-number">{{ d.date.day }}</div>
+                        <div class="day-events" data-date="{{ d.date_iso }}">
+                            {% for ev in d.events %}
+<span class="day-event" style="background:{% if ev.color == '#dfe6e9' %}#f8b4c4{% else %}{{ ev.color }}{% endif %}; color: #000;"
+                                  data-id="{{ ev.id }}" data-title="{{ ev.title|escape }}" data-color="{% if ev.color == '#dfe6e9' %}#f8b4c4{% else %}{{ ev.color }}{% endif %}" title="{{ ev.title }}">{{ ev.title }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="day-cell empty"></div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal-overlay" id="event-modal">
+    <div class="modal-box">
+        <h3 id="modal-date-title">Etkinlik ekle — <span id="modal-date"></span></h3>
+        <input type="hidden" id="event-date" value="">
+        <input type="hidden" id="event-id" value="">
+        <label>Başlık / İş</label>
+        <input type="text" id="event-title" placeholder="Örn: Sınav, Toplantı" maxlength="100">
+        <label>Renk</label>
+        <div class="color-picks" id="color-picks">
+            {% for value, label in color_choices %}
+            <button type="button" class="color-pick {% if value == '#667eea' %}selected{% endif %}" 
+                    style="background:{{ value }}" data-color="{{ value }}" title="{{ label }}"></button>
+            {% endfor %}
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn-delete" id="modal-delete" style="display: none;">Sil</button>
+            <button type="button" class="btn-cancel" id="modal-cancel">İptal</button>
+            <button type="button" class="btn-save" id="modal-save">Ekle</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const COLOR_CHOICES = [
+        '#667eea', '#f5576c', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9'
+    ];
+    const today = '{{ today }}';
+    const addEventUrl = '{% url "tracker:calendar_add_event" %}';
+    const editEventUrl = '{% url "tracker:calendar_edit_event" 0 %}'.replace('/0/', '/');
+    const deleteEventUrl = '{% url "tracker:calendar_delete_event" 0 %}'.replace('/0/', '/');
+    const csrfToken = '{{ csrf_token }}';
+
+    document.querySelectorAll('.day-cell:not(.empty)').forEach(function(cell) {
+        cell.addEventListener('click', function(e) {
+            var eventEl = e.target.closest('.day-event');
+            if (eventEl) {
+                e.stopPropagation();
+                openEditModal(eventEl);
+                return;
+            }
+            openAddModal(this.getAttribute('data-date'));
+        });
+    });
+
+    document.querySelectorAll('.day-event').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+            e.stopPropagation();
+            openEditModal(this);
+        });
+    });
+
+    function openAddModal(dateStr) {
+        document.getElementById('event-id').value = '';
+        document.getElementById('modal-date-title').innerHTML = 'Etkinlik ekle — <span id="modal-date"></span>';
+        document.getElementById('modal-date').textContent = formatDateTitle(dateStr);
+        document.getElementById('event-date').value = dateStr;
+        document.getElementById('event-title').value = '';
+        document.getElementById('modal-save').textContent = 'Ekle';
+        document.getElementById('modal-delete').style.display = 'none';
+        document.getElementById('event-modal').classList.add('open');
+        document.getElementById('event-title').focus();
+        selectColor(COLOR_CHOICES[0]);
+    }
+
+    function openEditModal(eventEl) {
+        var id = eventEl.getAttribute('data-id');
+        var title = eventEl.getAttribute('data-title') || eventEl.textContent;
+        var color = eventEl.getAttribute('data-color') || COLOR_CHOICES[0];
+        var container = eventEl.closest('.day-events');
+        var dateStr = container ? container.getAttribute('data-date') : '';
+
+        document.getElementById('event-id').value = id;
+        document.getElementById('modal-date-title').innerHTML = 'Etkinliği düzenle — <span id="modal-date"></span>';
+        document.getElementById('modal-date').textContent = formatDateTitle(dateStr);
+        document.getElementById('event-date').value = dateStr;
+        document.getElementById('event-title').value = title;
+        document.getElementById('modal-save').textContent = 'Kaydet';
+        document.getElementById('modal-delete').style.display = 'inline-block';
+        document.getElementById('event-modal').classList.add('open');
+        document.getElementById('event-title').focus();
+        selectColor(color);
+    }
+
+    function formatDateTitle(dateStr) {
+        var d = new Date(dateStr + 'T12:00:00');
+        return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function selectColor(color) {
+        document.querySelectorAll('.color-pick').forEach(function(btn) {
+            btn.classList.toggle('selected', btn.getAttribute('data-color') === color);
+        });
+    }
+
+    document.getElementById('modal-cancel').onclick = function() {
+        document.getElementById('event-modal').classList.remove('open');
+    };
+
+    document.getElementById('modal-save').onclick = function() {
+        var eventId = document.getElementById('event-id').value;
+        var date = document.getElementById('event-date').value;
+        var title = document.getElementById('event-title').value.trim();
+        var colorEl = document.querySelector('.color-pick.selected');
+        var color = colorEl ? colorEl.getAttribute('data-color') : COLOR_CHOICES[0];
+        if (!title) return;
+
+        if (eventId) {
+            var form = new FormData();
+            form.append('csrfmiddlewaretoken', csrfToken);
+            form.append('title', title);
+            form.append('color', color);
+            fetch(editEventUrl + eventId + '/', {
+                method: 'POST',
+                body: form,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    document.getElementById('event-modal').classList.remove('open');
+                    var span = document.querySelector('.day-event[data-id="' + data.id + '"]');
+                    if (span) {
+                        span.textContent = data.title;
+                        span.setAttribute('data-title', data.title);
+                        span.setAttribute('data-color', data.color);
+                        span.setAttribute('title', data.title);
+                        span.style.background = data.color;
+                        span.style.color = '#000';
+                    }
+                }
+            });
+        } else {
+            var form = new FormData();
+            form.append('csrfmiddlewaretoken', csrfToken);
+            form.append('date', date);
+            form.append('title', title);
+            form.append('color', color);
+            fetch(addEventUrl, {
+                method: 'POST',
+                body: form,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    document.getElementById('event-modal').classList.remove('open');
+                    var container = document.querySelector('.day-events[data-date="' + date + '"]');
+                    if (container) {
+                        var span = document.createElement('span');
+                        span.className = 'day-event';
+                        span.setAttribute('style', 'background:' + data.color + '; color: #000');
+                        span.setAttribute('data-id', data.id);
+                        span.setAttribute('data-title', data.title);
+                        span.setAttribute('data-color', data.color);
+                        span.setAttribute('title', data.title);
+                        span.textContent = data.title;
+                        container.appendChild(span);
+                    }
+                }
+            });
+        }
+    };
+
+    document.getElementById('modal-delete').onclick = function() {
+        var eventId = document.getElementById('event-id').value;
+        if (!eventId) return;
+        if (!confirm('Bu etkinliği silmek istediğinize emin misiniz?')) return;
+        fetch(deleteEventUrl + eventId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'csrfmiddlewaretoken=' + encodeURIComponent(csrfToken)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.ok) {
+                var el = document.querySelector('.day-event[data-id="' + eventId + '"]');
+                if (el) el.remove();
+                document.getElementById('event-modal').classList.remove('open');
+            }
+        });
+    };
+
+    document.querySelectorAll('.color-pick').forEach(function(btn) {
+        btn.onclick = function() {
+            document.querySelectorAll('.color-pick').forEach(function(b) { b.classList.remove('selected'); });
+            this.classList.add('selected');
+        };
+    });
+})();
+</script>
+{% endblock %}

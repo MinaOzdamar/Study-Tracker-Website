@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import StudySession
+from .models import StudySession, CalendarEvent
 
 # Modellerinizi buraya kaydedin.
 
@@ -68,3 +68,11 @@ class StudySessionAdmin(admin.ModelAdmin):
     
     # Liste görünümünde maksimum gösterilecek kayıt sayısı
     list_max_show_all = 100
+
+
+@admin.register(CalendarEvent)
+class CalendarEventAdmin(admin.ModelAdmin):
+    list_display = ['user', 'title', 'date', 'color']
+    list_filter = ['date', 'user']
+    search_fields = ['title']
+    ordering = ['-date']

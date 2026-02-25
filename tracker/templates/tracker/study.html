@@ -939,7 +939,25 @@
         
         hoursInput.addEventListener('input', updateCountdownFromInputs);
         minutesInput.addEventListener('input', updateCountdownFromInputs);
+        
+        // Tarih input'unu bugünün tarihi ile güncelle
+        updateDateInput();
     });
+    
+    // Tarih input'unu bugünün tarihi ile güncelleyen fonksiyon
+    function updateDateInput() {
+        const dateInput = document.getElementById('id_date');
+        if (dateInput) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
+            dateInput.value = todayStr;
+            // Zorla güncelleme için setAttribute da kullan
+            dateInput.setAttribute('value', todayStr);
+        }
+    }
     
     // Çalışma kaydı ekleme modal fonksiyonları
     function openAddSessionModal() {
@@ -949,12 +967,8 @@
         // Form alanlarını doldur
         document.getElementById('id_duration').value = totalMinutes;
         
-        // Bugünün tarihini ayarla
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        document.getElementById('id_date').value = `${year}-${month}-${day}`;
+        // Bugünün tarihini ayarla (her açılışta güncelle)
+        updateDateInput();
         
         // Modal'ı aç
         document.getElementById('addSessionModal').style.display = 'block';
@@ -1013,11 +1027,7 @@
         document.getElementById('id_duration').value = completedCountdownMinutes;
         
         // Bugünün tarihini ayarla
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        document.getElementById('id_date').value = `${year}-${month}-${day}`;
+        updateDateInput();
         
         // Çalışma kaydı ekleme modal'ını aç
         document.getElementById('addSessionModal').style.display = 'block';
