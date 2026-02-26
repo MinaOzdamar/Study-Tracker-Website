@@ -108,7 +108,6 @@
     .day-cell.today {
         border-color: #667eea;
         background: #f0f4ff;
-        font-weight: 700;
     }
     .day-number {
         font-size: 13px;
@@ -257,8 +256,8 @@
                         <div class="day-number">{{ d.date.day }}</div>
                         <div class="day-events" data-date="{{ d.date_iso }}">
                             {% for ev in d.events %}
-<span class="day-event" style="background:{% if ev.color == '#dfe6e9' %}#f8b4c4{% else %}{{ ev.color }}{% endif %}; color: #000;"
-                                  data-id="{{ ev.id }}" data-title="{{ ev.title|escape }}" data-color="{% if ev.color == '#dfe6e9' %}#f8b4c4{% else %}{{ ev.color }}{% endif %}" title="{{ ev.title }}">{{ ev.title }}</span>
+<span class="day-event" style="background:{{ ev.color_display }}; color: {{ ev.text_color }};"
+                                  data-id="{{ ev.id }}" data-title="{{ ev.title|escape }}" data-color="{{ ev.color_display }}" title="{{ ev.title }}">{{ ev.title }}</span>
                             {% endfor %}
                         </div>
                     </div>
@@ -284,7 +283,7 @@
         <label>Renk</label>
         <div class="color-picks" id="color-picks">
             {% for value, label in color_choices %}
-            <button type="button" class="color-pick {% if value == '#667eea' %}selected{% endif %}" 
+            <button type="button" class="color-pick {% if value == '#c9a0ff' %}selected{% endif %}" 
                     style="background:{{ value }}" data-color="{{ value }}" title="{{ label }}"></button>
             {% endfor %}
         </div>
@@ -299,8 +298,15 @@
 <script>
 (function() {
     const COLOR_CHOICES = [
-        '#667eea', '#f5576c', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7', '#dfe6e9'
+        '#c9a0ff', '#8fc4ff', '#88eeff', '#f5b0e6', '#b8e8a8', '#fff0b8', '#ffcc99', '#f5a0a0'
     ];
+    function textColorForHex(hex) {
+        hex = (hex || '').replace(/^#/, '');
+        if (hex.length !== 6) return '#000';
+        var r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+        var lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        return lum < 180 ? '#fff' : '#000';
+    }
     const today = '{{ today }}';
     const addEventUrl = '{% url "tracker:calendar_add_event" %}';
     const editEventUrl = '{% url "tracker:calendar_edit_event" 0 %}'.replace('/0/', '/');
@@ -402,7 +408,7 @@
                         span.setAttribute('data-color', data.color);
                         span.setAttribute('title', data.title);
                         span.style.background = data.color;
-                        span.style.color = '#000';
+                        span.style.color = textColorForHex(data.color);
                     }
                 }
             });
@@ -425,7 +431,7 @@
                     if (container) {
                         var span = document.createElement('span');
                         span.className = 'day-event';
-                        span.setAttribute('style', 'background:' + data.color + '; color: #000');
+                        span.setAttribute('style', 'background:' + data.color + '; color: ' + textColorForHex(data.color));
                         span.setAttribute('data-id', data.id);
                         span.setAttribute('data-title', data.title);
                         span.setAttribute('data-color', data.color);

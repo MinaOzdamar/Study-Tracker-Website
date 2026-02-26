@@ -981,6 +981,32 @@ def statistics(request):
     return render(request, 'tracker/statistics.html', context)
 
 
+# Takvim: depolanan renk -> pastel gösterim rengi (eski renkler için)
+CALENDAR_DISPLAY_COLOR_MAP = {
+    '#7f00ff': '#c9a0ff', '#667eea': '#c9a0ff',
+    '#0070f9': '#8fc4ff', '#f5576c': '#8fc4ff',
+    '#00ffff': '#88eeff', '#4ecdc4': '#88eeff',
+    '#ed74d2': '#f5b0e6', '#45b7d1': '#f5b0e6', '#ff56ff': '#f5b0e6',
+    '#6bc64d': '#b8e8a8', '#96ceb4': '#b8e8a8', '#9ed98a': '#b8e8a8',
+    '#ffeaa7': '#fff0b8',
+    '#ff993a': '#ffcc99', '#f8b4c4': '#ffcc99',
+    '#dfe6e9': '#f8c0ed',
+}
+
+
+def _calendar_text_color(hex_str):
+    """Hex arka plan rengine göre okunabilir metin rengi: siyah veya beyaz."""
+    hex_str = (hex_str or '').strip().lstrip('#')
+    if len(hex_str) != 6:
+        return '#000'
+    try:
+        r, g, b = int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16)
+    except ValueError:
+        return '#000'
+    lum = 0.299 * r + 0.587 * g + 0.114 * b
+    return '#fff' if lum < 180 else '#000'
+
+
 @login_required
 def calendar_view(request):
     """
@@ -1051,7 +1077,12 @@ def calendar_view(request):
         key = e.date.isoformat()
         if key not in events_by_date:
             events_by_date[key] = []
-        events_by_date[key].append({'id': e.id, 'title': e.title, 'color': e.color})
+        display_hex = CALENDAR_DISPLAY_COLOR_MAP.get(e.color, e.color)
+        text_color = _calendar_text_color(display_hex)
+        events_by_date[key].append({
+            'id': e.id, 'title': e.title, 'color': e.color,
+            'color_display': display_hex, 'text_color': text_color,
+        })
 
     # Haftalardaki günlere etkinlik listesi ekle
     for week in months_data[0]['weeks']:
@@ -1083,7 +1114,7 @@ def calendar_add_event(request):
 
     date_str = request.POST.get('date')
     title = (request.POST.get('title') or '').strip()
-    color = request.POST.get('color', '#667eea')
+    color = request.POST.get('color', '#c9a0ff')
 
     if not date_str or not title:
         return JsonResponse({'ok': False, 'error': 'Tarih ve başlık gerekli'}, status=400)
@@ -1095,7 +1126,7 @@ def calendar_add_event(request):
 
     allowed_colors = [c[0] for c in CalendarEvent.COLOR_CHOICES]
     if color not in allowed_colors:
-        color = '#667eea'
+        color = '#c9a0ff'
 
     event = CalendarEvent.objects.create(user=request.user, date=d, title=title[:100], color=color)
     return JsonResponse({

@@ -177,13 +177,14 @@ class CalendarEvent(models.Model):
     Kullanıcının bir güne eklediği başlık/iş (küçük etiket).
     """
     COLOR_CHOICES = [
-        ('#667eea', 'Mor'),
-        ('#f5576c', 'Pembe'),
-        ('#4ecdc4', 'Turkuaz'),
-        ('#45b7d1', 'Mavi'),
-        ('#96ceb4', 'Yeşil'),
-        ('#ffeaa7', 'Sarı'),
-        ('#f8b4c4', 'Açık Pembe'),
+        ('#c9a0ff', 'Mor'),
+        ('#8fc4ff', 'Koyu Mavi'),
+        ('#88eeff', 'Açık Turkuaz'),
+        ('#f5b0e6', 'Pembe'),
+        ('#b8e8a8', 'Yeşil'),
+        ('#fff0b8', 'Sarı'),
+        ('#ffcc99', 'Turuncu'),
+        ('#f5a0a0', 'Pastel Kırmızı'),
     ]
 
     user = models.ForeignKey(
@@ -197,7 +198,7 @@ class CalendarEvent(models.Model):
     color = models.CharField(
         max_length=7,
         choices=COLOR_CHOICES,
-        default='#667eea',
+        default='#c9a0ff',
         verbose_name='Renk'
     )
     created_at = models.DateTimeField(auto_now_add=True)
