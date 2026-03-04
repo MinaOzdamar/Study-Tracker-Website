@@ -35,12 +35,6 @@
         margin-top: 20px;
     }
     
-    .stats-grid.wide {
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-    
     .stat-card {
         background: transparent;
         color: #1f2933;
@@ -55,14 +49,8 @@
         border-bottom: none;
     }
     
-    .stat-card::before {
-        display: none;
-    }
-    
-    .stat-card.secondary::before {
-        display: none;
-    }
-    
+    .stat-card::before,
+    .stat-card.secondary::before,
     .stat-card.blue::before {
         display: none;
     }
@@ -86,12 +74,6 @@
         font-weight: 400;
     }
     
-    .stat-description {
-        font-size: 13px;
-        opacity: 0.9;
-        margin-top: 8px;
-    }
-    
     .section-subtitle {
         font-size: 14px;
         color: #666;
@@ -99,71 +81,93 @@
         margin-bottom: 15px;
     }
     
-    .stats-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-        font-size: 14px;
-    }
-    
-    .stats-table th,
-    .stats-table td {
-        padding: 8px 10px;
-        border-bottom: 1px solid #f0f0f0;
-        text-align: left;
-    }
-    
-    .stats-table th {
-        background-color: #f9fafc;
-        font-weight: 600;
-        color: #555;
-    }
-    
-    .stats-table tr:last-child td {
-        border-bottom: none;
-    }
-    
-    .stats-table small {
-        color: #999;
-    }
-    
     .range-form {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 0;
+        position: relative;
     }
     
-    .range-label {
+    .range-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 2px solid #e5e7eb;
         font-size: 14px;
         font-weight: 500;
         color: #374151;
-    }
-    
-    .range-select {
-        padding: 10px 18px;
-        border-radius: 8px;
-        border: 2px solid #667eea;
-        font-size: 14px;
-        font-weight: 500;
-        background-color: #fff;
-        color: #667eea;
+        background: #fff;
         cursor: pointer;
         transition: all 0.2s ease;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 36px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
-    .range-select:hover {
-        background-color: #f0f4ff;
+    .range-trigger:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+        color: #667eea;
     }
     
-    .range-select:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+    .range-trigger svg {
+        width: 16px;
+        height: 16px;
+        transition: transform 0.2s ease;
+    }
+    
+    .range-form.open .range-trigger svg {
+        transform: rotate(180deg);
+    }
+    
+    .range-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        min-width: 200px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12), 0 2px 10px rgba(102, 126, 234, 0.08);
+        border: 1px solid #e5e7eb;
+        padding: 8px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px);
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+        z-index: 50;
+    }
+    
+    .range-form.open .range-dropdown {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    .range-dropdown-option {
+        display: block;
+        width: 100%;
+        padding: 12px 14px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #4b5563;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    
+    .range-dropdown-option:hover {
+        background: linear-gradient(135deg, #f0f4ff 0%, #eef2ff 100%);
+        color: #667eea;
+    }
+    
+    .range-dropdown-option.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+    }
+    
+    .range-dropdown-option.active:hover {
+        background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+        color: #fff;
     }
     
     .chart-container {
@@ -180,80 +184,10 @@
         margin-bottom: 12px;
         font-weight: 500;
     }
-    
-    .bar-chart {
-        display: flex;
-        align-items: flex-end;
-        gap: 12px;
-        height: 180px;
-        padding: 10px 5px;
-        background-color: #fafbfc;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-    }
-    
-    .bar {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 8px;
-        min-width: 0;
-        height: 180px;
-    }
-    
-    .bar-value {
+    .chart-subtitle {
         font-size: 12px;
-        font-weight: 600;
-        color: #1f2937;
-        margin-bottom: 4px;
-    }
-    
-    .bar-rect {
-        width: 100%;
-        max-width: 50px;
-        min-width: 30px;
-        min-height: 12px;
-        border-radius: 6px 6px 0 0;
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
-        position: relative;
-        height: var(--bar-height, 3%);
-    }
-    
-    .bar-rect:hover {
-        opacity: 0.9;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-    }
-    
-    .bar-rect.muted {
-        background: linear-gradient(180deg, #e5e7eb, #d1d5db);
-        box-shadow: none;
-    }
-    
-    /* Son 7 Gün Çalışma: yeşil-turkuaz gradient, sütun yüksekliği dakikaya orantılı */
-    .bar-chart-study .bar-rect {
-        background: linear-gradient(180deg, #14b8a6 0%, #22c55e 100%);
-        box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
-        min-height: 16px;
-    }
-    .bar-chart-study .bar-rect:hover {
-        box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
-    }
-    .bar-chart-study .bar-rect.muted {
-        background: linear-gradient(180deg, #e5e7eb, #d1d5db);
-        min-height: 8px;
-    }
-    
-    .bar-label {
-        font-size: 11px;
-        color: #6b7280;
-        font-weight: 500;
-        text-align: center;
-        white-space: nowrap;
+        color: #9ca3af;
+        font-weight: 400;
     }
     
     .progress-row {
@@ -286,15 +220,13 @@
         width: var(--progress-width, 0%);
     }
     
-    .tag {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 11px;
-        background-color: #eff6ff;
-        color: #1d4ed8;
-        border: 1px solid #dbeafe;
-        margin-left: 6px;
+    .progress-percent {
+        font-size: 12px;
+        color: #4b5563;
+    }
+    
+    .chart-container.mt-24 {
+        margin-top: 24px;
     }
     
     .achievements-grid {
@@ -411,20 +343,26 @@
     <div class="statistics-section">
         <div class="summary-header">
             <h2 class="section-title" style="margin-bottom: 0;">Çalışma Süreleri ve Trendler</h2>
-            <form method="get" class="range-form">
-                <span class="range-label">Zaman aralığı:</span>
-                <select name="range" class="range-select" onchange="this.form.submit()">
-                    <option value="7" {% if range_param == '7' %}selected{% endif %}>Son 7 Gün</option>
-                    <option value="14" {% if range_param == '14' %}selected{% endif %}>Son 14 Gün</option>
-                    <option value="30" {% if range_param == '30' %}selected{% endif %}>Son 1 Ay</option>
-                    <option value="all" {% if range_param == 'all' %}selected{% endif %}>Şimdiye Kadar</option>
-                </select>
+            <form method="get" class="range-form" id="rangeForm">
+                <input type="hidden" name="range" id="rangeInput" value="{{ range_param|default:'7' }}">
+                <button type="button" class="range-trigger" id="rangeTrigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="rangeTriggerLabel">
+                        {% if range_param == '7' %}Son 7 Gün{% elif range_param == '14' %}Son 14 Gün{% elif range_param == '30' %}Son 1 Ay{% else %}Şimdiye Kadar{% endif %}
+                    </span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="range-dropdown" role="listbox" id="rangeDropdown" aria-hidden="true">
+                    <button type="button" class="range-dropdown-option {% if range_param == '7' %}active{% endif %}" data-value="7" role="option">Son 7 Gün</button>
+                    <button type="button" class="range-dropdown-option {% if range_param == '14' %}active{% endif %}" data-value="14" role="option">Son 14 Gün</button>
+                    <button type="button" class="range-dropdown-option {% if range_param == '30' %}active{% endif %}" data-value="30" role="option">Son 1 Ay</button>
+                    <button type="button" class="range-dropdown-option {% if range_param == 'all' %}active{% endif %}" data-value="all" role="option">Şimdiye Kadar</button>
+                </div>
             </form>
         </div>
         <div class="section-subtitle">
             Seçtiğin zaman aralığı için çalışma özetin ve son günlerdeki çalışma trendin.
         </div>
-        <div class="stats-grid wide">
+        <div class="stats-grid">
             <div class="stat-card secondary">
                 <div class="stat-label">Ortalama Çalışma (Tüm günler)</div>
                 <div class="stat-value">
@@ -445,26 +383,6 @@
                 <div class="stat-unit">Toplam {{ range_sessions_count }} oturum</div>
             </div>
         </div>
-        
-        <!-- Son 7 Gün Çalışma Çubuk Grafiği: dakikaya göre orantılı, en çok çalışılan gün üste değer -->
-        <div class="chart-container" style="margin-top: 24px;">
-            <div class="chart-title">Çalışma Süresi Grafiği</div>
-            <div class="bar-chart bar-chart-study">
-                {% for day in last_7_days_details %}
-                    <div class="bar">
-                        <div class="bar-value">
-                            {% if day.minutes > 0 %}{{ day.minutes }} dk{% else %}0{% endif %}
-                        </div>
-                        {% if day.percent > 0 %}
-                            <div class="bar-rect" style="--bar-height: {{ day.percent }}%;"></div>
-                        {% else %}
-                            <div class="bar-rect muted" style="--bar-height: 2%;"></div>
-                        {% endif %}
-                        <div class="bar-label">{{ day.date|date:"d.m" }}</div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
     </div>
     
     <!-- Hedefler ve Başarılar -->
@@ -481,24 +399,16 @@
                 <div class="progress-item">
                     <span>Haftalık Hedef ({{ weekly_goal_minutes }} dk)</span>
                     <div class="progress-bar">
-                        {% if weekly_progress_percent %}
-                            <div class="progress-fill" style="--progress-width: {{ weekly_progress_percent }}%;"></div>
-                        {% else %}
-                            <div class="progress-fill" style="--progress-width: 0%;"></div>
-                        {% endif %}
+                        <div class="progress-fill" style="--progress-width: {{ weekly_progress_percent|default:0 }}%;"></div>
                     </div>
-                    <span style="font-size: 12px; color: #4b5563;">{{ weekly_progress_percent }}%</span>
+                    <span class="progress-percent">{{ weekly_progress_percent|default:0 }}%</span>
                 </div>
                 <div class="progress-item">
                     <span>Aylık Hedef ({{ monthly_goal_minutes }} dk)</span>
                     <div class="progress-bar">
-                        {% if monthly_progress_percent %}
-                            <div class="progress-fill" style="--progress-width: {{ monthly_progress_percent }}%;"></div>
-                        {% else %}
-                            <div class="progress-fill" style="--progress-width: 0%;"></div>
-                        {% endif %}
+                        <div class="progress-fill" style="--progress-width: {{ monthly_progress_percent|default:0 }}%;"></div>
                     </div>
-                    <span style="font-size: 12px; color: #4b5563;">{{ monthly_progress_percent }}%</span>
+                    <span class="progress-percent">{{ monthly_progress_percent|default:0 }}%</span>
                 </div>
             </div>
         </div>
@@ -530,5 +440,47 @@
     </div>
     
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var form = document.getElementById('rangeForm');
+    var trigger = document.getElementById('rangeTrigger');
+    var triggerLabel = document.getElementById('rangeTriggerLabel');
+    var dropdown = document.getElementById('rangeDropdown');
+    var rangeInput = document.getElementById('rangeInput');
+    var labels = { '7': 'Son 7 Gün', '14': 'Son 14 Gün', '30': 'Son 1 Ay', 'all': 'Şimdiye Kadar' };
+
+    if (!form || !trigger || !dropdown) return;
+
+    trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        form.classList.toggle('open');
+        dropdown.setAttribute('aria-hidden', form.classList.contains('open') ? 'false' : 'true');
+        trigger.setAttribute('aria-expanded', form.classList.contains('open'));
+    });
+
+    dropdown.querySelectorAll('.range-dropdown-option').forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            var val = this.getAttribute('data-value');
+            rangeInput.value = val;
+            triggerLabel.textContent = labels[val] || val;
+            dropdown.querySelectorAll('.range-dropdown-option').forEach(function(o) { o.classList.remove('active'); });
+            this.classList.add('active');
+            form.classList.remove('open');
+            dropdown.setAttribute('aria-hidden', 'true');
+            trigger.setAttribute('aria-expanded', 'false');
+            form.submit();
+        });
+    });
+
+    document.addEventListener('click', function() {
+        form.classList.remove('open');
+        dropdown.setAttribute('aria-hidden', 'true');
+        trigger.setAttribute('aria-expanded', 'false');
+    });
+})();
+</script>
 {% endblock %}
 

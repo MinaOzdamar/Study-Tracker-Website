@@ -677,7 +677,7 @@ def statistics(request):
     last_30_days_hours = last_30_days_minutes // 60
     last_30_days_remaining_minutes = last_30_days_minutes % 60
     
-    # Günlük detaylar (son 7 gün) - küçük tablo ve trend için
+    # Günlük detaylar (son 7 gün) - diğer hesaplamalarda kullanılıyor
     last_7_days_details = []
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
@@ -688,15 +688,8 @@ def statistics(request):
             'hours': day_minutes // 60,
             'remaining_minutes': day_minutes % 60,
         })
-    # Trend grafikleri için maksimum değer
     last_7_days_max_minutes = max((d['minutes'] for d in last_7_days_details), default=0)
-    # Yüzdeleri ekle (bar grafiği için) - orantılı olarak
-    for d in last_7_days_details:
-        if last_7_days_max_minutes > 0 and d['minutes'] > 0:
-            d['percent'] = round((d['minutes'] / last_7_days_max_minutes) * 100, 1)
-        else:
-            d['percent'] = 0
-    
+
     # Mevcut streak (zaten kullanılan fonksiyon)
     current_streak = calculate_streak(user)
     
