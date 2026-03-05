@@ -210,3 +210,31 @@ class CalendarEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.date}"
+
+
+class UserStudyGoal(models.Model):
+    """Kullanıcının haftalık ve aylık çalışma hedefleri (dakika)."""
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='study_goal',
+        verbose_name='Kullanıcı'
+    )
+    weekly_goal_minutes = models.PositiveIntegerField(
+        default=420,
+        verbose_name='Haftalık hedef (dakika)',
+        help_text='Haftada hedeflenen toplam çalışma süresi (dakika)'
+    )
+    monthly_goal_minutes = models.PositiveIntegerField(
+        default=1800,
+        verbose_name='Aylık hedef (dakika)',
+        help_text='Ayda hedeflenen toplam çalışma süresi (dakika)'
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Çalışma Hedefi'
+        verbose_name_plural = 'Çalışma Hedefleri'
+
+    def __str__(self):
+        return f"{self.user.username}: {self.weekly_goal_minutes} dk/hafta, {self.monthly_goal_minutes} dk/ay"

@@ -10,8 +10,8 @@ from django.utils import timezone
 from django.db.models import Sum, Q
 from django.core.paginator import Paginator
 from datetime import timedelta
-from .models import StudySession, TodoItem, CalendarEvent
-from .forms import StudySessionForm, TodoForm
+from .models import StudySession, TodoItem, CalendarEvent, UserStudyGoal
+from .forms import StudySessionForm, TodoForm, StudyGoalForm
 
 
 def calculate_streak(user):
@@ -853,11 +853,22 @@ def statistics(request):
     # ==========================
     # HEDEF VE MOTİVASYON
     # ==========================
-    # Varsayılan hedefler: günde 60 dk, haftada 7*60 dk, ayda 30*60 dk
+    goal_obj, _ = UserStudyGoal.objects.get_or_create(
+        user=user,
+        defaults={'weekly_goal_minutes': 420, 'monthly_goal_minutes': 1800}
+    )
+    if request.method == 'POST' and 'set_goals' in request.POST:
+        goal_form = StudyGoalForm(request.POST, instance=goal_obj)
+        if goal_form.is_valid():
+            goal_form.save()
+            messages.success(request, 'Hedefler kaydedildi.')
+            range_q = request.POST.get('range', '7')
+            return redirect(reverse('tracker:statistics') + f'?range={range_q}')
+    else:
+        goal_form = StudyGoalForm(instance=goal_obj)
     daily_goal_minutes = 60
-    weekly_goal_minutes = 7 * daily_goal_minutes
-    monthly_goal_minutes = 30 * daily_goal_minutes
-    
+    weekly_goal_minutes = goal_obj.weekly_goal_minutes
+    monthly_goal_minutes = goal_obj.monthly_goal_minutes
     weekly_progress_percent = 0
     monthly_progress_percent = 0
     if weekly_goal_minutes > 0:
@@ -865,37 +876,43 @@ def statistics(request):
     if monthly_goal_minutes > 0:
         monthly_progress_percent = min(100, int((last_30_days_minutes / monthly_goal_minutes) * 100)) if last_30_days_minutes > 0 else 0
     
-    # Başarı rozetleri / achievements
+    # Başarı rozetleri / achievements (ilerleme: mevcut/hedef)
+    total_study_hours = total_study_minutes // 60
     achievements = [
         {
             'code': 'first_session',
             'title': 'İlk Adım',
             'description': 'İlk çalışma kaydını oluşturdun.',
             'earned': total_sessions >= 1,
+            'progress': f'({total_sessions}/1)',
         },
         {
             'code': 'ten_hours',
             'title': '10 Saat Kulübü',
             'description': 'Toplamda en az 10 saat çalıştın.',
             'earned': total_study_minutes >= 10 * 60,
+            'progress': f'({total_study_hours}/10)',
         },
         {
             'code': 'fifty_hours',
             'title': '50 Saat Ustası',
             'description': 'Toplamda en az 50 saat çalıştın.',
             'earned': total_study_minutes >= 50 * 60,
+            'progress': f'({total_study_hours}/50)',
         },
         {
             'code': 'week_streak',
             'title': '7 Günlük Seri',
             'description': 'En az 7 gün üst üste 60+ dakika çalıştın.',
             'earned': longest_streak >= 7,
+            'progress': f'({longest_streak}/7)',
         },
         {
             'code': 'hundred_sessions',
             'title': '100 Oturum',
             'description': 'En az 100 çalışma oturumu kaydettin.',
             'earned': total_sessions >= 100,
+            'progress': f'({total_sessions}/100)',
         },
     ]
     
@@ -969,6 +986,7 @@ def statistics(request):
         'weekly_progress_percent': weekly_progress_percent,
         'monthly_progress_percent': monthly_progress_percent,
         'achievements': achievements,
+        'goal_form': goal_form,
     }
     
     return render(request, 'tracker/statistics.html', context)

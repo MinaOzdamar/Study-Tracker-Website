@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import StudySession, TodoItem
+from .models import StudySession, TodoItem, UserStudyGoal
 
 
 class StudySessionForm(forms.ModelForm):
@@ -73,6 +73,21 @@ class TodoForm(forms.ModelForm):
                 'placeholder': '',
                 'maxlength': 100,
             }),
+        }
+
+
+class StudyGoalForm(forms.ModelForm):
+    """Haftalık ve aylık çalışma hedefi formu."""
+    class Meta:
+        model = UserStudyGoal
+        fields = ['weekly_goal_minutes', 'monthly_goal_minutes']
+        labels = {
+            'weekly_goal_minutes': 'Haftalık hedef (dakika)',
+            'monthly_goal_minutes': 'Aylık hedef (dakika)',
+        }
+        widgets = {
+            'weekly_goal_minutes': forms.NumberInput(attrs={'min': 1, 'max': 10080, 'class': 'goal-input'}),
+            'monthly_goal_minutes': forms.NumberInput(attrs={'min': 1, 'max': 43200, 'class': 'goal-input'}),
         }
 
 
